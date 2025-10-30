@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\workflow_assignment\Form;
+namespace Drupal\dworkflow\Form;
 
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Form handler for the workflow list add and edit forms.
+ * Form handler for the Workflow List add and edit forms.
  */
 class WorkflowListForm extends EntityForm {
 
@@ -44,7 +44,7 @@ class WorkflowListForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
-    /** @var \Drupal\workflow_assignment\WorkflowListInterface $workflow_list */
+    /** @var \Drupal\dworkflow\WorkflowListInterface $workflow_list */
     $workflow_list = $this->entity;
 
     $form['label'] = [
@@ -52,7 +52,7 @@ class WorkflowListForm extends EntityForm {
       '#title' => $this->t('Name'),
       '#maxlength' => 255,
       '#default_value' => $workflow_list->label(),
-      '#description' => $this->t('Name for this workflow list.'),
+      '#description' => $this->t('Name of the workflow list.'),
       '#required' => TRUE,
     ];
 
@@ -60,7 +60,7 @@ class WorkflowListForm extends EntityForm {
       '#type' => 'machine_name',
       '#default_value' => $workflow_list->id(),
       '#machine_name' => [
-        'exists' => '\Drupal\workflow_assignment\Entity\WorkflowList::load',
+        'exists' => '\Drupal\dworkflow\Entity\WorkflowList::load',
       ],
       '#disabled' => !$workflow_list->isNew(),
     ];
@@ -69,151 +69,164 @@ class WorkflowListForm extends EntityForm {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $workflow_list->getDescription(),
-      '#description' => $this->t('A description of this workflow list.'),
+      '#description' => $this->t('Optional description of this workflow list.'),
+      '#rows' => 3,
     ];
 
-    // User assignment section
-    $form['assignments'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Assignments'),
-      '#open' => TRUE,
+    // Assigned Entities (Users and/or Groups)
+    $form['assigned_entities'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Assigned Users and Groups'),
+      '#description' => $this->t('Select users and/or groups to assign to this workflow.'),
     ];
 
-    // Get all users for selection
-    $user_storage = $this->entityTypeManager->getStorage('user');
-    $user_ids = $user_storage->getQuery()
-      ->condition('status', 1)
-      ->condition('uid', 0, '>')
-      ->sort('name')
-      ->accessCheck(TRUE)
-      ->execute();
+    // Get current assignments
+    $current_entities = $workflow_list->getAssignedEntities();
+    $default_entities = [];
     
-    $users = $user_storage->loadMultiple($user_ids);
-    $user_options = [];
-    foreach ($users as $user) {
-      $user_options[$user->id()] = $user->getDisplayName();
+    foreach ($current_entities as $item) {
+      $default_entities[] = $item['entity'];
     }
 
-    $form['assignments']['assigned_users'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Assigned Users'),
-      '#options' => $user_options,
-      '#default_value' => $workflow_list->getAssignedUsers(),
-      '#multiple' => TRUE,
-      '#size' => 10,
-      '#description' => $this->t('Select users to assign to this workflow list. You can change this at any time.'),
-    ];
-
-    // Check if group module exists
-    $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('group')) {
-      $group_storage = $this->entityTypeManager->getStorage('group');
-      $group_ids = $group_storage->getQuery()
-        ->sort('label')
-        ->accessCheck(TRUE)
-        ->execute();
-      
-      $groups = $group_storage->loadMultiple($group_ids);
-      $group_options = [];
-      foreach ($groups as $group) {
-        $group_options[$group->id()] = $group->label();
-      }
-
-      $form['assignments']['assigned_groups'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Assigned Groups'),
-        '#options' => $group_options,
-        '#default_value' => $workflow_list->getAssignedGroups(),
-        '#multiple' => TRUE,
-        '#size' => 10,
-        '#description' => $this->t('Select groups to assign to this workflow list. You can change this at any time.'),
-      ];
-    }
-    else {
-      $form['assignments']['group_info'] = [
-        '#markup' => '<p><em>' . $this->t('Group module is not installed. Enable it to assign groups to workflow lists.') . '</em></p>',
-      ];
-    }
-
-    // Resource location section
-    $form['resources'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Resource Locations'),
-      '#open' => TRUE,
-    ];
-
-    // Get resource location vocabulary
-    $config = \Drupal::config('workflow_assignment.settings');
-    $vocabulary_id = $config->get('resource_vocabulary') ?: 'resource_locations';
-
-    // Get all terms from the vocabulary
-    $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
-    $terms = $term_storage->loadTree($vocabulary_id, 0, NULL, TRUE);
+    // Check if Group module is available
+    $group_module_exists = \Drupal::moduleHandler()->moduleExists('group');
     
-    $tag_options = [];
-    foreach ($terms as $term) {
-      $tag_options[$term->id()] = $term->getName();
+    // Build target types array
+    $target_types = ['user' => 'user'];
+    if ($group_module_exists) {
+      $target_types['group'] = 'group';
     }
 
-    if (empty($tag_options)) {
-      $form['resources']['no_terms'] = [
-        '#markup' => '<p><em>' . $this->t('No resource location tags available. Create tags in the @vocab vocabulary.', [
-          '@vocab' => $vocabulary_id,
-        ]) . '</em></p>',
+    $form['assigned_entities']['entities'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => $this->t('Users and Groups'),
+      '#target_type' => 'user', // Default, but will be overridden by tags
+      '#tags' => TRUE,
+      '#default_value' => $default_entities,
+      '#description' => $this->t('Start typing to search for users' . ($group_module_exists ? ' or groups' : '') . '. You can select multiple items.'),
+      '#element_validate' => [[$this, 'validateAssignedEntities']],
+    ];
+
+    // Add custom description for mixed selection
+    if ($group_module_exists) {
+      $form['assigned_entities']['help'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('<em>Note: Type "user:" followed by a name to search for users, or "group:" followed by a name to search for groups.</em>'),
       ];
     }
-    else {
-      $form['resources']['resource_tags'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Resource Location Tags'),
-        '#options' => $tag_options,
-        '#default_value' => $workflow_list->getResourceTags(),
-        '#multiple' => TRUE,
-        '#size' => 10,
-        '#description' => $this->t('Tag this workflow with resource locations. These designate where resources for this workflow can be found.'),
-      ];
-    }
+
+    // Resource Location Tags
+    $config = \Drupal::config('dworkflow.settings');
+    $vocabulary = $config->get('resource_vocabulary') ?: 'resource_locations';
+
+    $form['resource_tags'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => $this->t('Resource Location Tags'),
+      '#target_type' => 'taxonomy_term',
+      '#tags' => TRUE,
+      '#selection_settings' => [
+        'target_bundles' => [$vocabulary],
+      ],
+      '#default_value' => $this->loadTerms($workflow_list->getResourceTags()),
+      '#description' => $this->t('Tag this workflow with resource locations (e.g., Google Drive folders, project servers).'),
+    ];
 
     return $form;
+  }
+
+  /**
+   * Validates the assigned entities field.
+   */
+  public function validateAssignedEntities($element, FormStateInterface $form_state) {
+    // Custom validation if needed
+    // The entity_autocomplete field handles most validation
   }
 
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\workflow_assignment\WorkflowListInterface $workflow_list */
+    /** @var \Drupal\dworkflow\WorkflowListInterface $workflow_list */
     $workflow_list = $this->entity;
+
+    // Process assigned entities
+    $entities_value = $form_state->getValue('entities');
+    $assigned_entities = [];
     
-    // Set assigned users
-    $assigned_users = $form_state->getValue('assigned_users');
-    $workflow_list->setAssignedUsers(array_filter($assigned_users));
-    
-    // Set assigned groups if available
-    if ($form_state->hasValue('assigned_groups')) {
-      $assigned_groups = $form_state->getValue('assigned_groups');
-      $workflow_list->setAssignedGroups(array_filter($assigned_groups));
+    if (!empty($entities_value)) {
+      // Parse the entity_autocomplete tags format
+      foreach ($entities_value as $item) {
+        if (isset($item['target_id'])) {
+          // Determine entity type
+          $entity = $this->entityTypeManager->getStorage('user')->load($item['target_id']);
+          $entity_type = 'user';
+          
+          if (!$entity && \Drupal::moduleHandler()->moduleExists('group')) {
+            $entity = $this->entityTypeManager->getStorage('group')->load($item['target_id']);
+            $entity_type = 'group';
+          }
+          
+          if ($entity) {
+            $assigned_entities[] = [
+              'target_type' => $entity_type,
+              'target_id' => $item['target_id'],
+            ];
+          }
+        }
+      }
     }
     
-    // Set resource tags
-    if ($form_state->hasValue('resource_tags')) {
-      $resource_tags = $form_state->getValue('resource_tags');
-      $workflow_list->setResourceTags(array_filter($resource_tags));
+    $workflow_list->setAssignedEntities($assigned_entities);
+
+    // Process resource tags
+    $tags_value = $form_state->getValue('resource_tags');
+    $resource_tags = [];
+    
+    if (!empty($tags_value)) {
+      foreach ($tags_value as $item) {
+        if (isset($item['target_id'])) {
+          $resource_tags[] = $item['target_id'];
+        }
+      }
     }
+    
+    $workflow_list->setResourceTags($resource_tags);
 
     $status = $workflow_list->save();
 
-    if ($status === SAVED_NEW) {
-      $this->messenger()->addStatus($this->t('Created the %label workflow list.', [
-        '%label' => $workflow_list->label(),
-      ]));
-    }
-    else {
-      $this->messenger()->addStatus($this->t('Updated the %label workflow list.', [
-        '%label' => $workflow_list->label(),
-      ]));
+    switch ($status) {
+      case SAVED_NEW:
+        $this->messenger()->addMessage($this->t('Created the %label Workflow List.', [
+          '%label' => $workflow_list->label(),
+        ]));
+        break;
+
+      default:
+        $this->messenger()->addMessage($this->t('Saved the %label Workflow List.', [
+          '%label' => $workflow_list->label(),
+        ]));
     }
 
     $form_state->setRedirectUrl($workflow_list->toUrl('collection'));
+    
+    return $status;
+  }
+
+  /**
+   * Loads taxonomy terms by IDs.
+   *
+   * @param array $ids
+   *   Array of term IDs.
+   *
+   * @return array
+   *   Array of loaded term entities.
+   */
+  protected function loadTerms(array $ids) {
+    if (empty($ids)) {
+      return [];
+    }
+    
+    return $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($ids);
   }
 
 }

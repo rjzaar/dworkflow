@@ -1,5 +1,0 @@
-allowed_content_types:
-  - page
-  - topic
-  - event
-resource_vocabulary: resource_locations

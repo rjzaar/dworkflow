@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for dworkflow module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function dworkflow_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.dworkflow':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('DWorkflow provides a flexible workflow assignment system where you can create workflow lists containing assigned users and/or groups, with resource locations designated by taxonomy tags. All assignments can be changed on the fly.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Creating Workflow Lists') . '</dt>';
+      $output .= '<dd>' . t('Navigate to Structure > Workflow Lists to create and manage workflow lists. Each workflow can have users and/or groups assigned, along with resource location tags.') . '</dd>';
+      $output .= '<dt>' . t('Assigning Workflows to Content') . '</dt>';
+      $output .= '<dd>' . t('Once content types are enabled in the DWorkflow settings, you can assign workflow lists to content either through the content edit form or using the "Assign Workflow" tab on content pages.') . '</dd>';
+      $output .= '<dt>' . t('Quick Editing') . '</dt>';
+      $output .= '<dd>' . t('Use the "Quick Edit" option on workflow lists to rapidly modify assignments without loading the full edit form.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+
+    case 'entity.workflow_list.collection':
+      return '<p>' . t('Manage workflow lists. Each workflow list can have users and/or groups assigned, along with resource location tags. You can then assign these workflow lists to content.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function dworkflow_theme($existing, $type, $theme, $path) {
+  return [
+    'workflow_info' => [
+      'variables' => [
+        'workflow' => NULL,
+        'assigned_entities' => [],
+        'resource_tags' => [],
+      ],
+      'template' => 'workflow-info',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for node entities.
+ */
+function dworkflow_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  // Only add workflow info in full view mode
+  if ($view_mode !== 'full') {
+    return;
+  }
+
+  // Check if user has permission to view workflow assignments
+  if (!\Drupal::currentUser()->hasPermission('view workflow list assignments')) {
+    return;
+  }
+
+  // Check if the node has a workflow assigned
+  if (!$entity->hasField('field_workflow_list') || $entity->get('field_workflow_list')->isEmpty()) {
+    return;
+  }
+
+  $workflow_id = $entity->get('field_workflow_list')->target_id;
+  
+  /** @var \Drupal\dworkflow\WorkflowListInterface $workflow */
+  $workflow = \Drupal::entityTypeManager()
+    ->getStorage('workflow_list')
+    ->load($workflow_id);
+
+  if (!$workflow) {
+    return;
+  }
+
+  // Get assigned entities
+  $assigned_entities = $workflow->getAssignedEntities();
+  
+  // Load resource tags
+  $resource_tags = [];
+  $tag_ids = $workflow->getResourceTags();
+  if (!empty($tag_ids)) {
+    $terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadMultiple($tag_ids);
+    $resource_tags = $terms;
+  }
+
+  // Add workflow info to the build
+  $build['workflow_info'] = [
+    '#theme' => 'workflow_info',
+    '#workflow' => $workflow,
+    '#assigned_entities' => $assigned_entities,
+    '#resource_tags' => $resource_tags,
+    '#weight' => 100,
+  ];
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function dworkflow_entity_extra_field_info() {
+  $extra = [];
+
+  // Add workflow info as a pseudo-field for all node types
+  $config = \Drupal::config('dworkflow.settings');
+  $enabled_types = $config->get('enabled_content_types') ?: [];
+
+  foreach ($enabled_types as $bundle) {
+    $extra['node'][$bundle]['display']['workflow_info'] = [
+      'label' => t('Workflow Information'),
+      'description' => t('Displays assigned users/groups and resource locations from the workflow list'),
+      'weight' => 100,
+      'visible' => TRUE,
+    ];
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for workflow_info theme.
+ */
+function dworkflow_preprocess_workflow_info(&$variables) {
+  // Add any preprocessing needed for the template
+  $variables['#attached']['library'][] = 'dworkflow/workflow_info';
+}

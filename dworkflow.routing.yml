@@ -1,3 +1,11 @@
+dworkflow.settings:
+  path: '/admin/config/workflow/dworkflow'
+  defaults:
+    _form: '\Drupal\dworkflow\Form\DWorkflowSettingsForm'
+    _title: 'DWorkflow Settings'
+  requirements:
+    _permission: 'administer workflow lists'
+
 entity.workflow_list.collection:
   path: '/admin/structure/workflow-list'
   defaults:
@@ -15,7 +23,7 @@ entity.workflow_list.add_form:
     _permission: 'administer workflow lists'
 
 entity.workflow_list.edit_form:
-  path: '/admin/structure/workflow-list/{workflow_list}/edit'
+  path: '/admin/structure/workflow-list/{workflow_list}'
   defaults:
     _entity_form: 'workflow_list.edit'
     _title: 'Edit Workflow List'
@@ -30,31 +38,19 @@ entity.workflow_list.delete_form:
   requirements:
     _permission: 'administer workflow lists'
 
-workflow_assignment.settings:
-  path: '/admin/config/workflow/workflow-assignment'
+dworkflow.quick_edit:
+  path: '/admin/structure/workflow-list/{workflow_list}/quick-edit'
   defaults:
-    _form: '\Drupal\workflow_assignment\Form\SettingsForm'
-    _title: 'Workflow Assignment Settings'
-  requirements:
-    _permission: 'administer site configuration'
-
-workflow_assignment.node_assign:
-  path: '/node/{node}/assign-workflow'
-  defaults:
-    _form: '\Drupal\workflow_assignment\Form\NodeAssignWorkflowForm'
-    _title: 'Assign Workflow'
-  requirements:
-    _permission: 'assign workflow lists'
-    node: \d+
-  options:
-    parameters:
-      node:
-        type: entity:node
-
-workflow_assignment.quick_edit:
-  path: '/admin/workflow-list/{workflow_list}/quick-edit'
-  defaults:
-    _form: '\Drupal\workflow_assignment\Form\QuickEditWorkflowForm'
+    _form: '\Drupal\dworkflow\Form\QuickEditWorkflowForm'
     _title: 'Quick Edit Workflow'
   requirements:
     _permission: 'administer workflow lists'
+
+dworkflow.node_assign:
+  path: '/node/{node}/assign-workflow'
+  defaults:
+    _form: '\Drupal\dworkflow\Form\NodeAssignWorkflowForm'
+    _title: 'Assign Workflow'
+  requirements:
+    _permission: 'assign workflow lists to content'
+    _entity_access: 'node.update'

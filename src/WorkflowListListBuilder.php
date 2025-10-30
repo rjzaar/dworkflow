@@ -1,9 +1,10 @@
 <?php
 
-namespace Drupal\workflow_assignment;
+namespace Drupal\dworkflow;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 
 /**
  * Provides a listing of Workflow List entities.
@@ -16,10 +17,9 @@ class WorkflowListListBuilder extends ConfigEntityListBuilder {
   public function buildHeader() {
     $header['label'] = $this->t('Name');
     $header['id'] = $this->t('Machine name');
-    $header['assigned_users'] = $this->t('Users');
-    $header['assigned_groups'] = $this->t('Groups');
-    $header['resource_tags'] = $this->t('Resource Locations');
-    $header['changed'] = $this->t('Last Modified');
+    $header['description'] = $this->t('Description');
+    $header['assigned'] = $this->t('Assigned');
+    $header['resources'] = $this->t('Resources');
     return $header + parent::buildHeader();
   }
 
@@ -27,26 +27,51 @@ class WorkflowListListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /** @var \Drupal\workflow_assignment\WorkflowListInterface $entity */
+    /** @var \Drupal\dworkflow\WorkflowListInterface $entity */
     $row['label'] = $entity->label();
     $row['id'] = $entity->id();
+    $row['description'] = $entity->getDescription();
     
-    // Count assigned users
-    $users = $entity->getAssignedUsers();
-    $row['assigned_users'] = count($users) . ' ' . $this->formatPlural(count($users), 'user', 'users');
+    // Count assigned entities
+    $entities = $entity->getAssignedEntities();
+    $user_count = count($entity->getAssignedUsers());
+    $group_count = count($entity->getAssignedGroups());
     
-    // Count assigned groups
-    $groups = $entity->getAssignedGroups();
-    $row['assigned_groups'] = count($groups) . ' ' . $this->formatPlural(count($groups), 'group', 'groups');
+    $assigned_parts = [];
+    if ($user_count > 0) {
+      $assigned_parts[] = $this->formatPlural($user_count, '1 user', '@count users');
+    }
+    if ($group_count > 0) {
+      $assigned_parts[] = $this->formatPlural($group_count, '1 group', '@count groups');
+    }
+    
+    $row['assigned'] = !empty($assigned_parts) ? implode(', ', $assigned_parts) : $this->t('None');
     
     // Count resource tags
     $tags = $entity->getResourceTags();
-    $row['resource_tags'] = count($tags) . ' ' . $this->formatPlural(count($tags), 'location', 'locations');
-    
-    // Format changed time
-    $row['changed'] = \Drupal::service('date.formatter')->format($entity->getChangedTime(), 'short');
+    $row['resources'] = !empty($tags) ? $this->formatPlural(count($tags), '1 resource', '@count resources') : $this->t('None');
     
     return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+    
+    // Add Quick Edit operation
+    if ($entity->access('update')) {
+      $operations['quick_edit'] = [
+        'title' => $this->t('Quick Edit'),
+        'weight' => 15,
+        'url' => Url::fromRoute('dworkflow.quick_edit', [
+          'workflow_list' => $entity->id(),
+        ]),
+      ];
+    }
+    
+    return $operations;
   }
 
 }

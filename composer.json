@@ -1,0 +1,14 @@
+{
+  "name": "custom/dworkflow",
+  "type": "drupal-custom-module",
+  "description": "Dynamic workflow assignment system with unified user/group reference field",
+  "keywords": ["Drupal", "workflow", "assignment", "collaboration"],
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "drupal/core": "^10 || ^11",
+    "drupal/dynamic_entity_reference": "^2.0 || ^3.0"
+  },
+  "suggest": {
+    "drupal/group": "Required for group assignments in workflows"
+  }
+}

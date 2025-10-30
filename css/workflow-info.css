@@ -1,0 +1,80 @@
+/**
+ * @file
+ * Styles for DWorkflow module workflow information display.
+ */
+
+.workflow-info {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.workflow-info h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.25rem;
+  color: #495057;
+}
+
+.workflow-name {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.workflow-description {
+  margin-bottom: 15px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.workflow-assigned,
+.workflow-resources {
+  margin-top: 15px;
+}
+
+.workflow-entity-list,
+.workflow-resource-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 10px 0 0 0;
+}
+
+.workflow-entity-list li,
+.workflow-resource-list li {
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+}
+
+.entity-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 3px;
+  margin-right: 8px;
+  text-transform: uppercase;
+}
+
+.entity-badge--user {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.entity-badge--group {
+  background-color: #28a745;
+  color: #fff;
+}
+
+@media print {
+  .workflow-info {
+    border: 1px solid #000;
+    background-color: #fff;
+  }
+}

@@ -1,0 +1,13 @@
+dworkflow.admin:
+  title: 'Workflow Lists'
+  route_name: entity.workflow_list.collection
+  description: 'Manage workflow lists and assignments'
+  parent: system.admin_structure
+  weight: 10
+
+dworkflow.settings:
+  title: 'DWorkflow'
+  route_name: dworkflow.settings
+  description: 'Configure DWorkflow settings'
+  parent: system.admin_config_workflow
+  weight: 10

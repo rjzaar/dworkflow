@@ -1,0 +1,5 @@
+dworkflow.node.assign_workflow:
+  route_name: dworkflow.node_assign
+  title: 'Assign Workflow'
+  base_route: entity.node.canonical
+  weight: 30
