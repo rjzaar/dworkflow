@@ -1,0 +1,9 @@
+name: Workflow Assignment
+type: module
+description: 'Custom workflow system with assignable users/groups and tagged resource locations that can be changed on the fly.'
+core_version_requirement: ^10
+package: Custom
+dependencies:
+  - drupal:node
+  - drupal:taxonomy
+  - drupal:user

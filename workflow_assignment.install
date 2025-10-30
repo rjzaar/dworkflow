@@ -1,0 +1,132 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Workflow Assignment module.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\taxonomy\Entity\Vocabulary;
+
+/**
+ * Implements hook_install().
+ */
+function workflow_assignment_install() {
+  // Create resource locations vocabulary if it doesn't exist
+  $vocabulary_id = 'resource_locations';
+  if (!Vocabulary::load($vocabulary_id)) {
+    Vocabulary::create([
+      'vid' => $vocabulary_id,
+      'name' => 'Resource Locations',
+      'description' => 'Tags for designating resource locations in workflow lists.',
+    ])->save();
+    
+    \Drupal::messenger()->addStatus(t('Created "Resource Locations" vocabulary for workflow resource tagging.'));
+  }
+
+  // Get configured content types
+  $config = \Drupal::config('workflow_assignment.settings');
+  $allowed_types = $config->get('allowed_content_types') ?: ['page', 'topic', 'event'];
+
+  // Create field storage for workflow list assignment
+  if (!FieldStorageConfig::loadByName('node', 'field_workflow_list')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_workflow_list',
+      'entity_type' => 'node',
+      'type' => 'string',
+      'cardinality' => 1,
+      'settings' => [
+        'max_length' => 255,
+      ],
+    ])->save();
+  }
+
+  // Get all existing content types
+  $node_type_storage = \Drupal::entityTypeManager()->getStorage('node_type');
+  $existing_types = array_keys($node_type_storage->loadMultiple());
+  
+  // Filter to only include content types that actually exist
+  $allowed_types = array_intersect($allowed_types, $existing_types);
+
+  // Attach field to configured content types
+  foreach ($allowed_types as $bundle) {
+    // Double-check the bundle exists before creating field config
+    if (!$node_type_storage->load($bundle)) {
+      continue;
+    }
+    
+    if (!FieldConfig::loadByName('node', $bundle, 'field_workflow_list')) {
+      FieldConfig::create([
+        'field_name' => 'field_workflow_list',
+        'entity_type' => 'node',
+        'bundle' => $bundle,
+        'label' => 'Workflow List',
+        'description' => 'The workflow list assigned to this content.',
+        'required' => FALSE,
+        'settings' => [],
+      ])->save();
+
+      // Set form display
+      $form_display = \Drupal::entityTypeManager()
+        ->getStorage('entity_form_display')
+        ->load("node.{$bundle}.default");
+
+      if ($form_display) {
+        $form_display->setComponent('field_workflow_list', [
+          'type' => 'string_textfield',
+          'weight' => 100,
+        ])->save();
+      }
+
+      // Set view display
+      $view_display = \Drupal::entityTypeManager()
+        ->getStorage('entity_view_display')
+        ->load("node.{$bundle}.default");
+
+      if ($view_display) {
+        $view_display->setComponent('field_workflow_list', [
+          'type' => 'string',
+          'weight' => 100,
+          'label' => 'above',
+        ])->save();
+      }
+    }
+  }
+
+  if (!empty($allowed_types)) {
+    \Drupal::messenger()->addStatus(t('Workflow Assignment module has been installed. The field_workflow_list field has been added to the following content types: @types', [
+      '@types' => implode(', ', $allowed_types),
+    ]));
+  }
+  else {
+    \Drupal::messenger()->addWarning(t('Workflow Assignment module has been installed, but no matching content types were found. Please configure content types at Configuration > Workflow > Workflow Assignment.'));
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function workflow_assignment_uninstall() {
+  // Get all field instances
+  $field_config_storage = \Drupal::entityTypeManager()->getStorage('field_config');
+  $fields = $field_config_storage->loadByProperties([
+    'field_name' => 'field_workflow_list',
+    'entity_type' => 'node',
+  ]);
+
+  // Remove field from all content types
+  foreach ($fields as $field) {
+    $field->delete();
+  }
+
+  // Remove field storage
+  $field_storage = FieldStorageConfig::loadByName('node', 'field_workflow_list');
+  if ($field_storage) {
+    $field_storage->delete();
+  }
+
+  // Note: We don't delete the vocabulary as it may contain user data
+
+  \Drupal::messenger()->addStatus(t('Workflow Assignment module has been uninstalled.'));
+}

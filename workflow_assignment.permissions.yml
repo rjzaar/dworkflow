@@ -1,0 +1,12 @@
+administer workflow lists:
+  title: 'Administer workflow lists'
+  description: 'Create, edit, and delete workflow lists including user/group assignments and resource tags.'
+  restrict access: true
+
+assign workflow lists:
+  title: 'Assign workflow lists to content'
+  description: 'Assign and change workflow lists on content items.'
+
+view workflow lists:
+  title: 'View workflow list assignments'
+  description: 'View which workflow lists are assigned to content and who is assigned to workflows.'
