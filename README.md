@@ -1,355 +1,446 @@
-# DWorkflow - Dynamic Workflow Assignment Module
+# DWorkflow - Workflow Assignment Field
 
-A custom Drupal 10/11 module that provides a flexible workflow system where you can create workflow lists with properly configured entity reference fields for assigning users and/or groups, along with resource locations designated by taxonomy tags. All assignments can be changed on the fly.
+A Drupal 10/11 module that provides a **field type** for assigning multiple users and/or groups directly to content for workflow management.
+
+## Overview
+
+This module provides a custom field type that you can add to any content type (or other fieldable entity). The field allows editors to assign multiple users and/or groups to the content, with each assignment specifying whether it's a user or group.
+
+**No separate entities needed** - assignments are stored directly on the content as field values.
 
 ## Features
 
-- **Create Custom Workflow Lists** - Define named workflows with descriptions
-- **Proper Entity Reference Fields** - Correctly configured fields to assign both users AND groups
-- **Flexible Assignment Widget** - Add multiple users and/or groups with type selection
-- **Assign Groups** - Add/remove Open Social or Group module groups to workflows
-- **Resource Location Tagging** - Tag workflows with resource locations using taxonomy
-- **On-the-Fly Changes** - Modify all assignments at any time without restrictions
-- **Content Assignment** - Assign workflow lists to any content type
-- **Quick Edit Interface** - Rapid workflow modification without full edit form
-- **Visual Workflow Info** - Display workflow assignments on content pages
-
-## Key Implementation
-
-This module uses **properly configured entity reference fields** with:
-- Multiple value fields for assignments
-- Type selector (User/Group) for each entry
-- Entity autocomplete for each type
-- AJAX-powered dynamic forms
-- Add/Remove buttons for entries
+- **Custom Field Type**: Add "Workflow Assignment" field to any content type
+- **Multi-Value**: Assign multiple users and/or groups to a single piece of content
+- **Type Selection**: Choose User or Group for each assignment
+- **Entity Autocomplete**: Easy search and selection
+- **AJAX Updates**: Type selector dynamically updates autocomplete
+- **Visual Display**: Formatted list with badges showing user/group type
+- **Group Module Support**: Automatically detects and supports Group module
 
 ## Requirements
 
 - Drupal 10.x or 11.x
 - Node module (core)
-- Taxonomy module (core)
 - User module (core)
-- Optional: Group module (for group assignments in Open Social)
+- Optional: Group module (for group assignments)
 
 ## Installation
 
 1. **Copy the module:**
-   Copy the `dworkflow` folder to your Drupal installation's `modules/custom` directory
+   ```bash
+   cp -r dworkflow /path/to/drupal/modules/custom/
+   ```
 
 2. **Enable the module:**
    ```bash
    drush en dworkflow -y
-   ```
-
-3. **Clear caches:**
-   ```bash
    drush cr
    ```
 
-## Configuration
+## Usage
 
-### 1. Configure Module Settings
+### Adding the Field to a Content Type
 
-Navigate to **Configuration > Workflow > DWorkflow** (`/admin/config/workflow/dworkflow`)
+1. Navigate to **Structure > Content types > [Your Type] > Manage fields**
+   - Example: `/admin/structure/types/manage/article/fields`
 
-Configure:
-- **Enabled Content Types** - Select which content types can have workflow lists assigned
-- **Resource Location Vocabulary** - Choose the taxonomy vocabulary for resource locations (default: "resource_locations")
+2. Click **Add field**
 
-### 2. Create Resource Location Terms
+3. Under "Add a new field":
+   - **Field type**: Select "Workflow Assignment"
+   - **Label**: Enter a label (e.g., "Assigned To", "Workflow Team", "Reviewers")
 
-Navigate to **Structure > Taxonomy > Resource Locations** (`/admin/structure/taxonomy/manage/resource_locations`)
+4. Click **Save and continue**
 
-Create terms for your resource locations, for example:
-- Google Drive - Marketing Folder
-- Project Server - /projects/q1
-- SharePoint Site
-- GitHub Repository
-- Confluence Space
+5. Configure field settings:
+   - **Allowed number of values**: Unlimited (default and recommended)
+   - Or set a specific limit if needed
 
-### 3. Create Workflow Lists
+6. Click **Save field settings**
 
-Navigate to **Structure > Workflow Lists** (`/admin/structure/workflow-list`)
+7. Configure form display settings (optional)
 
-Click **Add Workflow List** and configure:
-- **Name** - Give your workflow a descriptive name
-- **Description** - Optional description
-- **Assigned Users and Groups** - Select users and/or groups (unified field!)
-- **Resource Location Tags** - Tag with relevant resource locations
+8. Click **Save settings**
 
-## Usage Examples
+### Assigning Users and Groups to Content
 
-### Example 1: Marketing Campaign Workflow
+When editing content with the workflow assignment field:
 
-1. Go to **Structure > Workflow Lists**
-2. Click **Add Workflow List**
-3. Fill in the details:
-   - Name: "Q1 Marketing Campaign"
-   - Description: "Marketing workflow for Q1 2025"
-   - Assign entities: Select team members (users) and marketing group (group)
-   - Tag resources: Select "Google Drive - Marketing" and "Trello - Q1 Board"
-4. Click **Save**
+1. **For each assignment:**
+   - Select **Type** (User or Group)
+   - Use **autocomplete** to find and select the user or group
+   - Click **Add another item** to add more assignments
 
-### Example 2: Assigning Workflows to Content
+2. **Save** the content
 
-**Method 1: From Content Edit Form**
-- Create or edit content (page, article, etc.)
-- Look for the **Workflow List** field
-- Select the workflow list
-- Save
+### Viewing Assignments
 
-**Method 2: Using Assign Tab**
-- View any content item
-- Click the **Assign Workflow** tab
-- Select workflow list
-- Click **Assign Workflow**
+When viewing content, assigned users and groups are displayed with:
+- **Badges** indicating type (USER or GROUP)
+- **Links** to user/group profiles
+- **Clean formatting** for easy scanning
 
-### Example 3: Quick Editing Workflows
+## Field Configuration
 
-**Quick Edit Method (Fastest):**
-- Go to **Structure > Workflow Lists**
-- Click **Quick Edit** on any workflow list
-- Modify users, groups, or resource tags
-- Click **Update Workflow**
+### Field Settings
 
-**Full Edit Method:**
-- Go to **Structure > Workflow Lists**
-- Click **Edit** on any workflow list
-- Make changes
-- Click **Save**
+- **Allowed number of values**: 
+  - Unlimited (recommended)
+  - Limited (set specific number)
 
-## Viewing Workflow Information
+### Form Display
 
-When viewing content with an assigned workflow, a **Workflow Information** section appears showing:
-- Workflow name and description
-- Assigned users (with "user" badge)
-- Assigned groups (with "group" badge)
-- Resource locations
+The field uses the "Workflow Assignment Selector" widget:
+- Type dropdown (User/Group)
+- Entity autocomplete
+- AJAX-powered updates
 
-Example display:
+### Display Settings
+
+The field uses the "Workflow Assignment List" formatter:
+- Lists all assignments
+- Shows type badges
+- Links to entities
+- Styled display
+
+## Examples
+
+### Example 1: Article with Review Team
+
+**Content Type:** Article
+
+**Field Label:** "Review Team"
+
+**Assignments:**
 ```
-Workflow Information
-━━━━━━━━━━━━━━━━━━━━
-Workflow: "Summer 2025 Campaign"
-
-Assigned Users and Groups:
-• [USER] marketing_manager
-• [USER] content_writer
-• [GROUP] Marketing Team
-
-Resource Locations:
-• Google Drive - Summer Campaign Folder
-• Trello Board - Summer 2025
+[USER]  editor_jane
+[USER]  writer_john
+[GROUP] Editorial Team
 ```
 
-## Permissions
+### Example 2: Project with Collaborators
 
-- **administer workflow lists** - Create, edit, delete workflow lists and modify assignments
-- **assign workflow lists to content** - Assign and change workflows on content
-- **view workflow list assignments** - View workflow information on content
+**Content Type:** Project
 
-## API / Programmatic Usage
+**Field Label:** "Collaborators"
 
-### Creating a Workflow with Mixed Assignments
+**Assignments:**
+```
+[USER]  project_manager
+[USER]  developer_alice
+[USER]  developer_bob
+[GROUP] QA Team
+[GROUP] DevOps Team
+```
+
+### Example 3: Event with Organizers
+
+**Content Type:** Event
+
+**Field Label:** "Event Organizers"
+
+**Assignments:**
+```
+[USER]  event_coordinator
+[GROUP] Volunteers
+[GROUP] Sponsor Committee
+```
+
+## API Usage
+
+### Getting Assignments Programmatically
 
 ```php
-use Drupal\dworkflow\Entity\WorkflowList;
+// Load a node
+$node = \Drupal\node\Entity\Node::load(123);
 
-// Create a new workflow list
-$workflow = WorkflowList::create([
-  'id' => 'my_project',
-  'label' => 'My Project Workflow',
-  'description' => 'Workflow for my awesome project',
-]);
-
-// Add users and groups
-$workflow->addAssignedUser(5);  // User ID 5
-$workflow->addAssignedUser(12); // User ID 12
-$workflow->addAssignedGroup(3); // Group ID 3
-
-// Add resource tags
-$workflow->addResourceTag(10); // Term ID 10
-$workflow->addResourceTag(15); // Term ID 15
-
-$workflow->save();
+// Check if field exists
+if ($node->hasField('field_workflow_assignment')) {
+  
+  // Get all assignments
+  $assignments = $node->get('field_workflow_assignment');
+  
+  foreach ($assignments as $assignment) {
+    $type = $assignment->target_type;     // 'user' or 'group'
+    $id = $assignment->target_id;         // Entity ID
+    $entity = $assignment->getEntity();   // Loaded entity object
+    
+    if ($entity) {
+      $name = $entity->label();
+      echo "{$type}: {$name} (ID: {$id})\n";
+    }
+  }
+}
 ```
 
-### Modifying an Existing Workflow
-
-```php
-// Load workflow
-$workflow = \Drupal::entityTypeManager()
-  ->getStorage('workflow_list')
-  ->load('my_project');
-
-// Add a user
-$workflow->addAssignedUser(20);
-
-// Remove a user
-$workflow->removeAssignedUser(5);
-
-// Change resource tags
-$workflow->setResourceTags([10, 11, 12]);
-
-$workflow->save();
-```
-
-### Assigning Workflow to Content
+### Adding Assignments Programmatically
 
 ```php
 use Drupal\node\Entity\Node;
 
-// Load node
+// Load or create node
 $node = Node::load(123);
 
-// Assign workflow
-$node->set('field_workflow_list', 'my_project');
-$node->save();
+// Add assignments
+$node->field_workflow_assignment[] = [
+  'target_type' => 'user',
+  'target_id' => 5,
+];
 
-// Remove workflow
-$node->set('field_workflow_list', NULL);
+$node->field_workflow_assignment[] = [
+  'target_type' => 'group',
+  'target_id' => 3,
+];
+
+$node->field_workflow_assignment[] = [
+  'target_type' => 'user',
+  'target_id' => 12,
+];
+
 $node->save();
 ```
 
-### Getting Workflow Information
+### Querying Content by Assignment
 
 ```php
-// Load workflow
-$workflow = \Drupal::entityTypeManager()
-  ->getStorage('workflow_list')
-  ->load('my_project');
+// Find all nodes assigned to user 5
+$query = \Drupal::entityQuery('node')
+  ->condition('field_workflow_assignment.target_type', 'user')
+  ->condition('field_workflow_assignment.target_id', 5)
+  ->accessCheck(TRUE);
 
-// Get all assigned entities (users and groups)
-$entities = $workflow->getAssignedEntities();
-// Returns: [
-//   ['entity_type' => 'user', 'entity_id' => 5, 'entity' => $user_entity],
-//   ['entity_type' => 'group', 'entity_id' => 3, 'entity' => $group_entity],
-// ]
+$nids = $query->execute();
 
-// Get only user IDs
-$users = $workflow->getAssignedUsers();
-// Returns: [5, 12, 20]
+// Find all nodes assigned to group 3
+$query = \Drupal::entityQuery('node')
+  ->condition('field_workflow_assignment.target_type', 'group')
+  ->condition('field_workflow_assignment.target_id', 3)
+  ->accessCheck(TRUE);
 
-// Get only group IDs
-$groups = $workflow->getAssignedGroups();
-// Returns: [3]
-
-// Get resource tags
-$tags = $workflow->getResourceTags();
-// Returns: [10, 15]
-
-// Get metadata
-$created = $workflow->getCreatedTime();
-$changed = $workflow->getChangedTime();
+$nids = $query->execute();
 ```
 
-## Open Social Integration
+### Getting All Users Assigned
 
-This module is designed to work seamlessly with Open Social:
-- **Group Support** - Automatically detects and supports Group module groups
-- **Content Types** - Works with Open Social content types (topic, event, book, etc.)
-- **Team Collaboration** - Perfect for community-based workflows
-- **Resource Sharing** - Tag shared resources for easy team access
+```php
+$users = [];
+$assignments = $node->get('field_workflow_assignment');
 
-## Troubleshooting
+foreach ($assignments as $assignment) {
+  if ($assignment->target_type === 'user') {
+    $users[] = $assignment->target_id;
+  }
+}
 
-### Module Won't Enable
+// Load all user entities at once
+$user_entities = \Drupal::entityTypeManager()
+  ->getStorage('user')
+  ->loadMultiple($users);
+```
 
-- Check dependencies are met
-- Clear caches:
-  ```bash
-  drush cr
-  ```
+### Getting All Groups Assigned
 
-### Can't Assign Workflows to Content
+```php
+$groups = [];
+$assignments = $node->get('field_workflow_assignment');
 
-- Verify content type is enabled in settings: `/admin/config/workflow/dworkflow`
-- Check field configuration: `/admin/structure/types/manage/[content-type]/fields`
+foreach ($assignments as $assignment) {
+  if ($assignment->target_type === 'group') {
+    $groups[] = $assignment->target_id;
+  }
+}
 
-### Groups Not Available
+// Load all group entities
+if (!empty($groups)) {
+  $group_entities = \Drupal::entityTypeManager()
+    ->getStorage('group')
+    ->loadMultiple($groups);
+}
+```
 
-- Install and enable the Group module
-- Clear caches after enabling Group module
-- Create at least one group
+## Use Cases
 
-### Resource Locations Not Available
+### 1. Editorial Workflow
+Add field to Article content type to track who needs to review/approve content.
 
-- Verify the vocabulary exists: `/admin/structure/taxonomy`
-- Check vocabulary is selected in settings
-- Create terms in the vocabulary
+### 2. Project Management
+Add field to Project content type to assign team members and departments.
 
-### Permission Issues
+### 3. Task Assignment
+Add field to Task content type to assign responsible users and groups.
 
-Go to **Configuration > People > Permissions** and verify:
-- Users have appropriate permissions for their role
-- "Administer workflow lists" for administrators
-- "Assign workflow lists" for content editors
+### 4. Event Organization
+Add field to Event content type to track organizers and volunteer teams.
+
+### 5. Document Collaboration
+Add field to Document content type to manage who can collaborate.
+
+## Advantages
+
+### Simple Integration
+- Just add the field to your content type
+- No complex configuration needed
+- Works like any other field
+
+### Flexible
+- Use on any fieldable entity (nodes, terms, custom entities)
+- Set per-entity-type field labels
+- Configure number of values allowed
+
+### Powerful
+- Reference users and groups in one field
+- Query by assignment
+- Full entity access (name, email, etc.)
+
+### User-Friendly
+- Clear type selection
+- Easy autocomplete
+- Visual badges
+- No training needed
+
+## Field Storage
+
+Assignments are stored directly in the field table:
+
+```sql
+-- Field table: node__field_workflow_assignment
+CREATE TABLE node__field_workflow_assignment (
+  entity_id INT,
+  revision_id INT,
+  delta INT,
+  field_workflow_assignment_target_type VARCHAR(32),
+  field_workflow_assignment_target_id INT,
+  ...
+);
+
+-- Example data:
+-- entity_id=123, delta=0, target_type='user', target_id=5
+-- entity_id=123, delta=1, target_type='group', target_id=3
+-- entity_id=123, delta=2, target_type='user', target_id=12
+```
+
+## Group Module Integration
+
+If the Group module is installed and enabled:
+- The "Group" option appears in the type selector
+- Group autocomplete works automatically
+- Group entities are loaded and displayed
+- No additional configuration needed
+
+## Permissions
+
+Field access is controlled by standard Drupal field permissions:
+
+- **Edit own [field]**: Users can edit assignments on their own content
+- **Edit any [field]**: Users can edit assignments on any content
+- **View [field]**: Users can view assignments
+
+Configure via **People > Permissions** or using modules like Field Permissions.
+
+## Theming
+
+### Template
+
+Override the template: `templates/dworkflow-assignment-list.html.twig`
+
+Available variables:
+```twig
+assignments: [
+  {
+    type: 'user' or 'group',
+    entity: Entity object,
+    label: Entity label,
+    url: Entity URL
+  }
+]
+```
+
+### CSS
+
+Override styles by targeting:
+```css
+.dworkflow-assignments { }
+.dworkflow-assignment-list { }
+.dworkflow-assignment-item { }
+.dworkflow-badge { }
+.dworkflow-badge--user { }
+.dworkflow-badge--group { }
+```
 
 ## Uninstallation
 
-The module will automatically:
-- Remove workflow list field from all content types
-- Remove field storage
-- Keep the Resource Locations vocabulary (contains user data)
+To remove the module:
 
-To uninstall:
-```bash
-drush pmu dworkflow -y
-```
+1. **Remove the field from all content types:**
+   - Structure > Content types > [Type] > Manage fields
+   - Delete the workflow assignment field
+   - Repeat for all content types using the field
 
-## Implementation Approach
+2. **Uninstall the module:**
+   ```bash
+   drush pmu dworkflow -y
+   ```
 
-### Proper Entity Reference Fields
+**Note:** Removing the field will delete all assignment data!
 
-This module uses correctly configured entity reference fields with:
+## Troubleshooting
 
-**Multi-value Form Widget:**
-```
-For each assignment:
-  [Type: User ▼] [Select user...     ]
-  [Type: Group ▼] [Select group...   ]
-  [Type: User ▼] [Select user...     ]
-  
-  [Add another] [Remove last]
-```
+### Field doesn't appear in field type list
 
-**Storage Format:**
-```yaml
-assigned_entities:
-  - target_type: user
-    target_id: 5
-  - target_type: group
-    target_id: 2
-  - target_type: user
-    target_id: 12
-```
+- Clear caches: `drush cr`
+- Verify module is enabled: `drush pml | grep dworkflow`
 
-**Benefits:**
-- Native Drupal entity reference
-- No contrib dependencies
-- Proper type selection per entry
-- AJAX-powered dynamic forms
-- Full control over validation
-- Easy to extend
+### Group option doesn't appear
+
+- Install and enable Group module
+- Clear caches: `drush cr`
+
+### AJAX not working
+
+- Clear caches: `drush cr`
+- Check browser console for JavaScript errors
+- Verify jQuery is loaded
+
+### Entities not loading
+
+- Check entity IDs are valid
+- Verify entities haven't been deleted
+- Check entity access permissions
 
 ## Technical Details
 
-- **WorkflowList Entity** - Config entity storing workflow data
-- **Storage Format** - Assignments stored as array of target_type/target_id pairs
-- **Form System** - AJAX-powered multi-value widget with type selectors
-- **Display** - Custom theme template with CSS styling and type badges
+### Field Type
+
+- **ID**: `dworkflow_assignment`
+- **Cardinality**: Unlimited
+- **Properties**: `target_type` (string), `target_id` (integer)
+- **Storage**: Database table per entity type
+
+### Widget
+
+- **ID**: `dworkflow_assignment_default`
+- **Type**: Select + Entity Autocomplete
+- **AJAX**: Yes (type selector updates autocomplete)
+
+### Formatter
+
+- **ID**: `dworkflow_assignment_default`
+- **Output**: Themed list with badges
+- **Links**: Yes (to entity pages)
 
 ## Support
 
-For issues or feature requests, please refer to:
-- This documentation
-- Drupal.org Dynamic Entity Reference module documentation
-- Drupal API documentation
+For issues, questions, or contributions:
+
+1. Check this documentation
+2. Review Drupal.org documentation on custom field types
+3. Check the Field API documentation
 
 ## License
 
-This module is provided as-is for use with Drupal 10/11.
+GPL-2.0-or-later
 
 ## Author
 
-Designed for flexible, dynamic workflow management in Drupal 10/11 and Open Social distributions.
+Designed for flexible workflow management in Drupal 10/11.

@@ -1,12 +1,9 @@
 name: DWorkflow
 type: module
-description: 'Dynamic workflow assignment system allowing users and/or groups to be assigned to workflow lists with resource location tagging.'
+description: 'Provides a field to assign multiple users and/or groups to content for workflow management.'
 core_version_requirement: ^10 || ^11
 package: Workflow
 
 dependencies:
   - drupal:node
   - drupal:user
-  - drupal:taxonomy
-
-configure: dworkflow.settings

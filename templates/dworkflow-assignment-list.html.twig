@@ -1,0 +1,28 @@
+{#
+/**
+ * @file
+ * Theme template for displaying workflow assignments.
+ *
+ * Available variables:
+ * - assignments: Array of assignment information:
+ *   - type: 'user' or 'group'
+ *   - entity: The loaded entity object
+ *   - label: The entity label
+ *   - url: The entity URL
+ */
+#}
+<div class="dworkflow-assignments">
+  <h4>{{ 'Assigned Users and Groups'|t }}</h4>
+  <ul class="dworkflow-assignment-list">
+  {% for assignment in assignments %}
+    <li class="dworkflow-assignment-item dworkflow-assignment-item--{{ assignment.type }}">
+      <span class="dworkflow-badge dworkflow-badge--{{ assignment.type }}">
+        {{ assignment.type|upper }}
+      </span>
+      <a href="{{ assignment.url }}" class="dworkflow-assignment-link">
+        {{ assignment.label }}
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
+</div>

@@ -1,5 +1,5 @@
-workflow_info:
+dworkflow:
   version: 1.0
   css:
     theme:
-      css/workflow-info.css: {}
+      css/dworkflow.css: {}
