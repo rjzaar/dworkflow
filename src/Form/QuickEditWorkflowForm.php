@@ -64,28 +64,86 @@ class QuickEditWorkflowForm extends FormBase {
       ]),
     ];
 
-    // Get current assignments
-    $current_entities = $workflow_list->getAssignedEntities();
-    $default_entities = [];
-    
-    foreach ($current_entities as $item) {
-      $default_entities[] = $item['entity'];
-    }
-
     // Check if Group module is available
     $group_module_exists = \Drupal::moduleHandler()->moduleExists('group');
 
-    $form['entities'] = [
-      '#type' => 'entity_autocomplete',
+    // Get current assignments
+    $current_entities = $workflow_list->getAssignedEntities();
+    
+    // Build form elements for each entity type
+    $form['assigned_entities'] = [
+      '#type' => 'fieldset',
       '#title' => $this->t('Assigned Users and Groups'),
-      '#target_type' => 'user',
-      '#tags' => TRUE,
-      '#default_value' => $default_entities,
-      '#description' => $this->t('Modify users and groups assigned to this workflow.'),
+      '#prefix' => '<div id="assigned-entities-wrapper">',
+      '#suffix' => '</div>',
     ];
 
-    if ($group_module_exists) {
-      $form['entities']['#description'] = $this->t('Modify users and groups assigned to this workflow. Type "user:" or "group:" to specify the type.');
+    $num_entities = $form_state->get('num_entities');
+    if ($num_entities === NULL) {
+      $count = !empty($current_entities) ? count($current_entities) : 1;
+      $form_state->set('num_entities', $count);
+      $num_entities = $count;
+    }
+
+    for ($i = 0; $i < $num_entities; $i++) {
+      $default_type = isset($current_entities[$i]['entity_type']) ? $current_entities[$i]['entity_type'] : 'user';
+      $default_entity = isset($current_entities[$i]['entity']) ? $current_entities[$i]['entity'] : NULL;
+
+      $form['assigned_entities'][$i] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['container-inline', 'clearfix']],
+      ];
+
+      $form['assigned_entities'][$i]['target_type'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Type'),
+        '#options' => $this->getEntityTypeOptions($group_module_exists),
+        '#default_value' => $default_type,
+        '#ajax' => [
+          'callback' => '::updateEntityAutocomplete',
+          'wrapper' => "entity-autocomplete-{$i}",
+        ],
+      ];
+
+      $selected_type = $form_state->getValue(['assigned_entities', $i, 'target_type']) ?: $default_type;
+
+      $form['assigned_entities'][$i]['target_id'] = [
+        '#type' => 'entity_autocomplete',
+        '#title' => $this->t('Select'),
+        '#title_display' => 'invisible',
+        '#target_type' => $selected_type,
+        '#default_value' => $default_entity,
+        '#prefix' => "<div id='entity-autocomplete-{$i}'>",
+        '#suffix' => '</div>',
+      ];
+    }
+
+    $form['assigned_entities']['actions'] = [
+      '#type' => 'actions',
+    ];
+
+    $form['assigned_entities']['actions']['add_entity'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Add another'),
+      '#submit' => ['::addEntityCallback'],
+      '#ajax' => [
+        'callback' => '::addEntityAjax',
+        'wrapper' => 'assigned-entities-wrapper',
+      ],
+      '#limit_validation_errors' => [],
+    ];
+
+    if ($num_entities > 1) {
+      $form['assigned_entities']['actions']['remove_entity'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Remove last'),
+        '#submit' => ['::removeEntityCallback'],
+        '#ajax' => [
+          'callback' => '::addEntityAjax',
+          'wrapper' => 'assigned-entities-wrapper',
+        ],
+        '#limit_validation_errors' => [],
+      ];
     }
 
     // Resource Location Tags
@@ -125,6 +183,53 @@ class QuickEditWorkflowForm extends FormBase {
   }
 
   /**
+   * Gets entity type options.
+   */
+  protected function getEntityTypeOptions($include_groups = FALSE) {
+    $options = ['user' => $this->t('User')];
+    if ($include_groups) {
+      $options['group'] = $this->t('Group');
+    }
+    return $options;
+  }
+
+  /**
+   * AJAX callback to update entity autocomplete.
+   */
+  public function updateEntityAutocomplete(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $index = $triggering_element['#parents'][1];
+    return $form['assigned_entities'][$index]['target_id'];
+  }
+
+  /**
+   * Submit callback to add another entity.
+   */
+  public function addEntityCallback(array &$form, FormStateInterface $form_state) {
+    $num_entities = $form_state->get('num_entities');
+    $form_state->set('num_entities', $num_entities + 1);
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Submit callback to remove last entity.
+   */
+  public function removeEntityCallback(array &$form, FormStateInterface $form_state) {
+    $num_entities = $form_state->get('num_entities');
+    if ($num_entities > 1) {
+      $form_state->set('num_entities', $num_entities - 1);
+    }
+    $form_state->setRebuild();
+  }
+
+  /**
+   * AJAX callback for add/remove buttons.
+   */
+  public function addEntityAjax(array &$form, FormStateInterface $form_state) {
+    return $form['assigned_entities'];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -132,29 +237,23 @@ class QuickEditWorkflowForm extends FormBase {
     $workflow_list = $form_state->get('workflow_list');
 
     // Process assigned entities
-    $entities_value = $form_state->getValue('entities');
     $assigned_entities = [];
+    $entities_value = $form_state->getValue('assigned_entities');
     
     if (!empty($entities_value)) {
-      foreach ($entities_value as $item) {
-        if (isset($item['target_id'])) {
-          // Try to load as user first
-          $entity = $this->entityTypeManager->getStorage('user')->load($item['target_id']);
-          $entity_type = 'user';
-          
-          // If not a user, try group
-          if (!$entity && \Drupal::moduleHandler()->moduleExists('group')) {
-            $entity = $this->entityTypeManager->getStorage('group')->load($item['target_id']);
-            $entity_type = 'group';
-          }
-          
-          if ($entity) {
-            $assigned_entities[] = [
-              'target_type' => $entity_type,
-              'target_id' => $item['target_id'],
-            ];
-          }
+      foreach ($entities_value as $key => $item) {
+        if (!is_numeric($key)) {
+          continue;
         }
+        
+        if (empty($item['target_id']) || empty($item['target_type'])) {
+          continue;
+        }
+        
+        $assigned_entities[] = [
+          'target_type' => $item['target_type'],
+          'target_id' => $item['target_id'],
+        ];
       }
     }
     

@@ -1,11 +1,12 @@
 # DWorkflow - Dynamic Workflow Assignment Module
 
-A custom Drupal 10/11 module that provides a flexible workflow system where you can create workflow lists with a unified field for assigning users and/or groups, along with resource locations designated by taxonomy tags. All assignments can be changed on the fly.
+A custom Drupal 10/11 module that provides a flexible workflow system where you can create workflow lists with properly configured entity reference fields for assigning users and/or groups, along with resource locations designated by taxonomy tags. All assignments can be changed on the fly.
 
 ## Features
 
 - **Create Custom Workflow Lists** - Define named workflows with descriptions
-- **Unified Assignment Field** - Single field to assign both users AND groups using Dynamic Entity Reference
+- **Proper Entity Reference Fields** - Correctly configured fields to assign both users AND groups
+- **Flexible Assignment Widget** - Add multiple users and/or groups with type selection
 - **Assign Groups** - Add/remove Open Social or Group module groups to workflows
 - **Resource Location Tagging** - Tag workflows with resource locations using taxonomy
 - **On-the-Fly Changes** - Modify all assignments at any time without restrictions
@@ -13,14 +14,14 @@ A custom Drupal 10/11 module that provides a flexible workflow system where you 
 - **Quick Edit Interface** - Rapid workflow modification without full edit form
 - **Visual Workflow Info** - Display workflow assignments on content pages
 
-## Key Difference from Original
+## Key Implementation
 
-This module uses the **Dynamic Entity Reference** module to provide a **unified field** that can reference both users and groups in a single field, rather than having separate fields for each. This provides:
-
-- Cleaner, more intuitive UI
-- Single interface for all assignments
-- Better user experience
-- Easier to extend to other entity types in the future
+This module uses **properly configured entity reference fields** with:
+- Multiple value fields for assignments
+- Type selector (User/Group) for each entry
+- Entity autocomplete for each type
+- AJAX-powered dynamic forms
+- Add/Remove buttons for entries
 
 ## Requirements
 
@@ -28,26 +29,19 @@ This module uses the **Dynamic Entity Reference** module to provide a **unified 
 - Node module (core)
 - Taxonomy module (core)
 - User module (core)
-- **Dynamic Entity Reference module** (contrib) - `drupal/dynamic_entity_reference`
 - Optional: Group module (for group assignments in Open Social)
 
 ## Installation
 
-1. **Install Dynamic Entity Reference module:**
-   ```bash
-   composer require drupal/dynamic_entity_reference
-   drush en dynamic_entity_reference -y
-   ```
-
-2. **Copy the module:**
+1. **Copy the module:**
    Copy the `dworkflow` folder to your Drupal installation's `modules/custom` directory
 
-3. **Enable the module:**
+2. **Enable the module:**
    ```bash
    drush en dworkflow -y
    ```
 
-4. **Clear caches:**
+3. **Clear caches:**
    ```bash
    drush cr
    ```
@@ -168,11 +162,9 @@ $workflow = WorkflowList::create([
   'description' => 'Workflow for my awesome project',
 ]);
 
-// Add users
+// Add users and groups
 $workflow->addAssignedUser(5);  // User ID 5
 $workflow->addAssignedUser(12); // User ID 12
-
-// Add groups
 $workflow->addAssignedGroup(3); // Group ID 3
 
 // Add resource tags
@@ -263,10 +255,7 @@ This module is designed to work seamlessly with Open Social:
 
 ### Module Won't Enable
 
-- Check that Dynamic Entity Reference module is installed:
-  ```bash
-  drush pm:list | grep dynamic_entity_reference
-  ```
+- Check dependencies are met
 - Clear caches:
   ```bash
   drush cr
@@ -308,39 +297,47 @@ To uninstall:
 drush pmu dworkflow -y
 ```
 
-## Comparison: Separate Fields vs Unified Field
+## Implementation Approach
 
-### Old Approach (Separate Fields)
-```
-Assigned Users:     [Select users...]
-Assigned Groups:    [Select groups...]
-```
-- Two separate fields
-- More clutter in the UI
-- Users need to think about which field to use
+### Proper Entity Reference Fields
 
-### New Approach (Unified Field)
+This module uses correctly configured entity reference fields with:
+
+**Multi-value Form Widget:**
 ```
-Assigned Users and Groups:  [Select users or groups...]
+For each assignment:
+  [Type: User ▼] [Select user...     ]
+  [Type: Group ▼] [Select group...   ]
+  [Type: User ▼] [Select user...     ]
+  
+  [Add another] [Remove last]
 ```
-- Single field for everything
-- Cleaner, more intuitive
-- Powered by Dynamic Entity Reference module
+
+**Storage Format:**
+```yaml
+assigned_entities:
+  - target_type: user
+    target_id: 5
+  - target_type: group
+    target_id: 2
+  - target_type: user
+    target_id: 12
+```
+
+**Benefits:**
+- Native Drupal entity reference
+- No contrib dependencies
+- Proper type selection per entry
+- AJAX-powered dynamic forms
+- Full control over validation
+- Easy to extend
 
 ## Technical Details
 
 - **WorkflowList Entity** - Config entity storing workflow data
-- **Storage Format** - Assignments stored as:
-  ```yaml
-  assigned_entities:
-    - target_type: user
-      target_id: 5
-    - target_type: group
-      target_id: 2
-  ```
-- **Forms** - WorkflowListForm, QuickEditWorkflowForm, NodeAssignWorkflowForm
-- **List Builder** - Custom list builder with Quick Edit operation
-- **Display** - Custom theme template with CSS styling
+- **Storage Format** - Assignments stored as array of target_type/target_id pairs
+- **Form System** - AJAX-powered multi-value widget with type selectors
+- **Display** - Custom theme template with CSS styling and type badges
 
 ## Support
 

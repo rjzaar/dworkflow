@@ -8,6 +8,5 @@ dependencies:
   - drupal:node
   - drupal:user
   - drupal:taxonomy
-  - drupal:dynamic_entity_reference
 
 configure: dworkflow.settings

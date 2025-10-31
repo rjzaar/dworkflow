@@ -73,45 +73,136 @@ class WorkflowListForm extends EntityForm {
       '#rows' => 3,
     ];
 
-    // Assigned Entities (Users and/or Groups)
-    $form['assigned_entities'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Assigned Users and Groups'),
-      '#description' => $this->t('Select users and/or groups to assign to this workflow.'),
-    ];
-
-    // Get current assignments
-    $current_entities = $workflow_list->getAssignedEntities();
-    $default_entities = [];
-    
-    foreach ($current_entities as $item) {
-      $default_entities[] = $item['entity'];
-    }
-
+    // Assigned Entities (Users and/or Groups) - Using Dynamic Entity Reference
     // Check if Group module is available
     $group_module_exists = \Drupal::moduleHandler()->moduleExists('group');
     
-    // Build target types array
-    $target_types = ['user' => 'user'];
-    if ($group_module_exists) {
-      $target_types['group'] = 'group';
+    // Get current assignments and format for dynamic entity reference
+    $current_entities = $workflow_list->getAssignedEntities();
+    $default_values = [];
+    
+    foreach ($current_entities as $item) {
+      $default_values[] = [
+        'target_type' => $item['entity_type'],
+        'target_id' => $item['entity_id'],
+      ];
     }
 
-    $form['assigned_entities']['entities'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Users and Groups'),
-      '#target_type' => 'user', // Default, but will be overridden by tags
-      '#tags' => TRUE,
-      '#default_value' => $default_entities,
-      '#description' => $this->t('Start typing to search for users' . ($group_module_exists ? ' or groups' : '') . '. You can select multiple items.'),
-      '#element_validate' => [[$this, 'validateAssignedEntities']],
+    // Build available entity types
+    $available_entity_types = [
+      'user' => [
+        'label' => $this->t('User'),
+        'handler' => 'default',
+        'handler_settings' => [
+          'filter' => [
+            'type' => '_none',
+          ],
+          'target_bundles' => NULL,
+        ],
+      ],
+    ];
+    
+    if ($group_module_exists) {
+      $available_entity_types['group'] = [
+        'label' => $this->t('Group'),
+        'handler' => 'default',
+        'handler_settings' => [
+          'target_bundles' => NULL,
+        ],
+      ];
+    }
+
+    $form['assigned_entities_wrapper'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
     ];
 
-    // Add custom description for mixed selection
-    if ($group_module_exists) {
-      $form['assigned_entities']['help'] = [
-        '#type' => 'item',
-        '#markup' => $this->t('<em>Note: Type "user:" followed by a name to search for users, or "group:" followed by a name to search for groups.</em>'),
+    // Add multiple entity reference fields dynamically
+    $count = !empty($default_values) ? count($default_values) : 0;
+    $count = max($count, 1); // At least one field
+
+    // Store in form state how many we have
+    $num_entities = $form_state->get('num_entities');
+    if ($num_entities === NULL) {
+      $form_state->set('num_entities', $count);
+      $num_entities = $count;
+    }
+
+    $form['assigned_entities'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Assigned Users and Groups'),
+      '#description' => $this->t('Assign users and/or groups to this workflow. Click "Add another" to add more assignments.'),
+      '#prefix' => '<div id="assigned-entities-wrapper">',
+      '#suffix' => '</div>',
+    ];
+
+    for ($i = 0; $i < $num_entities; $i++) {
+      $default_type = isset($default_values[$i]['target_type']) ? $default_values[$i]['target_type'] : 'user';
+      $default_id = isset($default_values[$i]['target_id']) ? $default_values[$i]['target_id'] : NULL;
+      
+      $default_entity = NULL;
+      if ($default_id && $default_type) {
+        $default_entity = $this->entityTypeManager->getStorage($default_type)->load($default_id);
+      }
+
+      $form['assigned_entities'][$i] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['container-inline', 'clearfix']],
+      ];
+
+      $form['assigned_entities'][$i]['target_type'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Type'),
+        '#options' => $this->getEntityTypeOptions($group_module_exists),
+        '#default_value' => $default_type,
+        '#required' => FALSE,
+        '#ajax' => [
+          'callback' => '::updateEntityAutocomplete',
+          'wrapper' => "entity-autocomplete-{$i}",
+          'event' => 'change',
+        ],
+      ];
+
+      // Get the selected type (from form state if ajax, otherwise default)
+      $selected_type = $form_state->getValue(['assigned_entities', $i, 'target_type']) ?: $default_type;
+
+      $form['assigned_entities'][$i]['target_id'] = [
+        '#type' => 'entity_autocomplete',
+        '#title' => $this->t('Select @type', ['@type' => $this->getEntityTypeLabel($selected_type)]),
+        '#title_display' => 'invisible',
+        '#target_type' => $selected_type,
+        '#default_value' => $default_entity,
+        '#required' => FALSE,
+        '#prefix' => "<div id='entity-autocomplete-{$i}'>",
+        '#suffix' => '</div>',
+      ];
+    }
+
+    $form['assigned_entities']['actions'] = [
+      '#type' => 'actions',
+    ];
+
+    $form['assigned_entities']['actions']['add_entity'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Add another'),
+      '#submit' => ['::addEntityCallback'],
+      '#ajax' => [
+        'callback' => '::addEntityAjax',
+        'wrapper' => 'assigned-entities-wrapper',
+      ],
+      '#limit_validation_errors' => [],
+    ];
+
+    if ($num_entities > 1) {
+      $form['assigned_entities']['actions']['remove_entity'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Remove last'),
+        '#submit' => ['::removeEntityCallback'],
+        '#ajax' => [
+          'callback' => '::addEntityAjax',
+          'wrapper' => 'assigned-entities-wrapper',
+        ],
+        '#limit_validation_errors' => [],
       ];
     }
 
@@ -135,11 +226,74 @@ class WorkflowListForm extends EntityForm {
   }
 
   /**
+   * Gets entity type options for the select list.
+   */
+  protected function getEntityTypeOptions($include_groups = FALSE) {
+    $options = [
+      'user' => $this->t('User'),
+    ];
+    
+    if ($include_groups) {
+      $options['group'] = $this->t('Group');
+    }
+    
+    return $options;
+  }
+
+  /**
+   * Gets label for entity type.
+   */
+  protected function getEntityTypeLabel($type) {
+    $labels = [
+      'user' => $this->t('user'),
+      'group' => $this->t('group'),
+    ];
+    
+    return isset($labels[$type]) ? $labels[$type] : $type;
+  }
+
+  /**
+   * AJAX callback to update entity autocomplete.
+   */
+  public function updateEntityAutocomplete(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $index = $triggering_element['#parents'][1];
+    
+    return $form['assigned_entities'][$index]['target_id'];
+  }
+
+  /**
+   * Submit callback to add another entity field.
+   */
+  public function addEntityCallback(array &$form, FormStateInterface $form_state) {
+    $num_entities = $form_state->get('num_entities');
+    $form_state->set('num_entities', $num_entities + 1);
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Submit callback to remove last entity field.
+   */
+  public function removeEntityCallback(array &$form, FormStateInterface $form_state) {
+    $num_entities = $form_state->get('num_entities');
+    if ($num_entities > 1) {
+      $form_state->set('num_entities', $num_entities - 1);
+    }
+    $form_state->setRebuild();
+  }
+
+  /**
+   * AJAX callback for add/remove entity buttons.
+   */
+  public function addEntityAjax(array &$form, FormStateInterface $form_state) {
+    return $form['assigned_entities'];
+  }
+
+  /**
    * Validates the assigned entities field.
    */
   public function validateAssignedEntities($element, FormStateInterface $form_state) {
     // Custom validation if needed
-    // The entity_autocomplete field handles most validation
   }
 
   /**
@@ -149,30 +303,26 @@ class WorkflowListForm extends EntityForm {
     /** @var \Drupal\dworkflow\WorkflowListInterface $workflow_list */
     $workflow_list = $this->entity;
 
-    // Process assigned entities
-    $entities_value = $form_state->getValue('entities');
+    // Process assigned entities from the multi-field widget
     $assigned_entities = [];
+    $entities_value = $form_state->getValue('assigned_entities');
     
     if (!empty($entities_value)) {
-      // Parse the entity_autocomplete tags format
-      foreach ($entities_value as $item) {
-        if (isset($item['target_id'])) {
-          // Determine entity type
-          $entity = $this->entityTypeManager->getStorage('user')->load($item['target_id']);
-          $entity_type = 'user';
-          
-          if (!$entity && \Drupal::moduleHandler()->moduleExists('group')) {
-            $entity = $this->entityTypeManager->getStorage('group')->load($item['target_id']);
-            $entity_type = 'group';
-          }
-          
-          if ($entity) {
-            $assigned_entities[] = [
-              'target_type' => $entity_type,
-              'target_id' => $item['target_id'],
-            ];
-          }
+      foreach ($entities_value as $key => $item) {
+        // Skip non-numeric keys (like 'actions')
+        if (!is_numeric($key)) {
+          continue;
         }
+        
+        // Skip empty entries
+        if (empty($item['target_id']) || empty($item['target_type'])) {
+          continue;
+        }
+        
+        $assigned_entities[] = [
+          'target_type' => $item['target_type'],
+          'target_id' => $item['target_id'],
+        ];
       }
     }
     

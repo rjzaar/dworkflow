@@ -5,31 +5,12 @@
 Before installing DWorkflow, ensure you have:
 
 - Drupal 10.x or 11.x installed
-- Composer available
 - Access to Drush (recommended)
 - Administrative access to your Drupal site
 
-## Step 1: Install Dependencies
+## Step 1: Install DWorkflow Module
 
-DWorkflow requires the Dynamic Entity Reference module. Install it using Composer:
-
-```bash
-composer require drupal/dynamic_entity_reference
-```
-
-Enable the Dynamic Entity Reference module:
-
-```bash
-drush en dynamic_entity_reference -y
-```
-
-Or via the UI: Go to **Extend** and enable "Dynamic Entity Reference"
-
-## Step 2: Install DWorkflow Module
-
-### Option A: Using Composer (Recommended for custom modules)
-
-If you're managing this as a custom module in your project:
+### Option A: Using Drush (Recommended)
 
 1. Place the `dworkflow` directory in `modules/custom/`:
    ```
@@ -70,7 +51,7 @@ If you're managing this as a custom module in your project:
    drush cr
    ```
 
-## Step 3: Verify Installation
+## Step 2: Verify Installation
 
 Check that the module is installed correctly:
 
@@ -83,7 +64,7 @@ You should see:
 DWorkflow (dworkflow)    Enabled    Module
 ```
 
-## Step 4: Initial Configuration
+## Step 3: Initial Configuration
 
 ### A. Configure DWorkflow Settings
 
@@ -133,7 +114,7 @@ The module automatically creates a "Resource Locations" vocabulary with example 
 
 4. Click **Save**
 
-## Step 5: Test the Installation
+## Step 4: Test the Installation
 
 ### Test 1: Assign Workflow to Content
 
@@ -227,9 +208,8 @@ For each enabled content type:
 
 **Solution:**
 ```bash
-# Verify Dynamic Entity Reference is installed
-composer require drupal/dynamic_entity_reference
-drush en dynamic_entity_reference -y
+# Check dependencies
+drush pml --type=module --status=enabled
 
 # Clear caches and try again
 drush cr
@@ -310,7 +290,6 @@ If you encounter issues:
   - Node (core)
   - User (core)
   - Taxonomy (core)
-  - Dynamic Entity Reference (contrib)
 - **Optional Modules**:
   - Group (contrib) - for group assignments
 - **Database**: MySQL 5.7.8+, MariaDB 10.3.7+, PostgreSQL 12+, or SQLite 3.26+

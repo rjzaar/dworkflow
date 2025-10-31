@@ -7,8 +7,10 @@ All notable changes to the DWorkflow module will be documented in this file.
 ### Added
 - Initial release of DWorkflow module
 - Config entity type for Workflow Lists
-- Unified assignment field using Dynamic Entity Reference module
-- Support for assigning both users AND groups in a single field
+- Proper entity reference fields for assigning users and/or groups
+- Multi-value form widget with type selector for each entry
+- AJAX-powered add/remove buttons for assignments
+- Support for assigning both users AND groups with explicit type selection
 - Resource location tagging using taxonomy
 - Quick Edit form for rapid workflow modification
 - Node assignment form with dedicated tab
@@ -26,19 +28,21 @@ All notable changes to the DWorkflow module will be documented in this file.
 - Comprehensive documentation and examples
 
 ### Technical Features
-- Uses Dynamic Entity Reference module for unified field
+- Uses proper Drupal core entity reference with custom widget
+- No contrib module dependencies
 - Config entity storage for exportability
 - Created/changed timestamps on all workflows
 - Field storage and field config management
 - Custom list builder with operations
-- Entity autocomplete widgets with tags support
+- Entity autocomplete widgets for each type
+- AJAX form callbacks for dynamic entry management
 - Backward compatible helper methods
 - Clean uninstall process
 
-### Differences from workflow_assignment module
-- Uses unified `assigned_entities` field instead of separate `assigned_users` and `assigned_groups` fields
-- Requires `dynamic_entity_reference` module
-- Cleaner UI with single assignment interface
-- Renamed from workflow_assignment to dworkflow
-- Enhanced code documentation
-- Improved error handling and logging
+### Implementation Approach
+- Multi-value widget with type selector per entry
+- Proper entity reference autocomplete for each type
+- AJAX add/remove functionality
+- Explicit type storage in configuration
+- Native Drupal form API
+- No external dependencies beyond core
