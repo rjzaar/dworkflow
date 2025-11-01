@@ -149,7 +149,7 @@ class WorkflowAssignmentSettingsForm extends ConfigFormBase {
         'field_name' => 'field_workflow_list',
         'entity_type' => 'node',
         'type' => 'string',
-        'cardinality' => 1,
+        'cardinality' => -1, // Unlimited - allow multiple workflows
       ]);
       $field_storage->save();
     }
@@ -185,16 +185,14 @@ class WorkflowAssignmentSettingsForm extends ConfigFormBase {
             ])->save();
           }
 
-          // Set view display.
+          // Set view display - HIDE the field (only show on workflow tab)
           $view_display = $this->entityTypeManager
             ->getStorage('entity_view_display')
             ->load("node.{$type}.default");
           
           if ($view_display) {
-            $view_display->setComponent('field_workflow_list', [
-              'type' => 'workflow_info_formatter',
-              'weight' => 100,
-            ])->save();
+            // Remove the field from display - we only show it on the workflow tab
+            $view_display->removeComponent('field_workflow_list')->save();
           }
         }
       }

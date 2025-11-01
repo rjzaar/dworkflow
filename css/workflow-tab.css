@@ -228,3 +228,63 @@
   border: 1px solid #f48fb1;
   color: #c2185b;
 }
+
+/* Workflow Assignments Table */
+.workflow-assignments-table {
+  width: 100%;
+  margin: 20px 0;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-assignments-table thead {
+  background: #0074bd;
+  color: #fff;
+}
+
+.workflow-assignments-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #005a8d;
+}
+
+.workflow-assignments-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: top;
+}
+
+.workflow-assignments-table tr:hover {
+  background: #f5f5f5;
+}
+
+.workflow-assignments-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Destination badges in table */
+.workflow-assignments-table .destination-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  margin: 2px;
+  border-radius: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* No workflow message styling */
+.no-workflow-message {
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.no-workflow-message p {
+  margin: 0;
+  color: #856404;
+}

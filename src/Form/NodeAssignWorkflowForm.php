@@ -57,7 +57,7 @@ class NodeAssignWorkflowForm extends FormBase {
     $form_state->set('node', $node);
 
     $form['info'] = [
-      '#markup' => '<p>' . $this->t('Assign or change the workflow for: <strong>@title</strong>', [
+      '#markup' => '<p>' . $this->t('Manage workflows for: <strong>@title</strong>', [
         '@title' => $node->getTitle(),
       ]) . '</p>',
     ];
@@ -66,24 +66,27 @@ class NodeAssignWorkflowForm extends FormBase {
     $workflow_storage = $this->entityTypeManager->getStorage('workflow_list');
     $workflows = $workflow_storage->loadMultiple();
     
-    $workflow_options = ['' => $this->t('- None -')];
+    $workflow_options = [];
     foreach ($workflows as $workflow) {
       $workflow_options[$workflow->id()] = $workflow->label();
     }
 
-    // Get current workflow.
-    $current_workflow = NULL;
+    // Get currently assigned workflows.
+    $current_workflows = [];
     if ($node->hasField('field_workflow_list')) {
-      $current_workflow = $node->get('field_workflow_list')->value;
+      foreach ($node->get('field_workflow_list') as $item) {
+        if (!empty($item->value)) {
+          $current_workflows[] = $item->value;
+        }
+      }
     }
 
     $form['workflow_list'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Workflow List'),
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Assigned Workflows'),
       '#options' => $workflow_options,
-      '#default_value' => $current_workflow,
-      '#required' => FALSE,
-      '#description' => $this->t('Select a workflow list to assign to this content, or select "None" to remove the current workflow.'),
+      '#default_value' => $current_workflows,
+      '#description' => $this->t('Select one or more workflows to assign to this content. Uncheck to remove workflows.'),
     ];
 
     $form['actions'] = [
@@ -99,7 +102,7 @@ class NodeAssignWorkflowForm extends FormBase {
     $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
-      '#url' => $node->toUrl(),
+      '#url' => Url::fromRoute('workflow_assignment.node_workflow_tab', ['node' => $node->id()]),
       '#attributes' => ['class' => ['button']],
     ];
 
@@ -112,23 +115,23 @@ class NodeAssignWorkflowForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\node\NodeInterface $node */
     $node = $form_state->get('node');
-    $workflow_id = $form_state->getValue('workflow_list');
+    $selected_workflows = array_filter($form_state->getValue('workflow_list'));
 
     if ($node->hasField('field_workflow_list')) {
-      $node->set('field_workflow_list', $workflow_id ?: NULL);
+      // Clear existing workflows and set new ones
+      $node->set('field_workflow_list', array_values($selected_workflows));
       $node->save();
 
-      if ($workflow_id) {
-        $workflow = $this->entityTypeManager
-          ->getStorage('workflow_list')
-          ->load($workflow_id);
-        
-        $this->messenger()->addStatus($this->t('Workflow "@workflow" has been assigned to this content.', [
-          '@workflow' => $workflow->label(),
-        ]));
+      $count = count($selected_workflows);
+      if ($count > 0) {
+        $this->messenger()->addStatus($this->formatPlural(
+          $count,
+          'Successfully assigned 1 workflow to this content.',
+          'Successfully assigned @count workflows to this content.'
+        ));
       }
       else {
-        $this->messenger()->addStatus($this->t('Workflow has been removed from this content.'));
+        $this->messenger()->addStatus($this->t('All workflows have been removed from this content.'));
       }
     }
 

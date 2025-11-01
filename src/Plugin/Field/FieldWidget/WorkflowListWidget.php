@@ -73,7 +73,7 @@ class WorkflowListWidget extends WidgetBase implements ContainerFactoryPluginInt
     $workflow_storage = $this->entityTypeManager->getStorage('workflow_list');
     $workflows = $workflow_storage->loadMultiple();
 
-    $options = ['' => $this->t('- None -')];
+    $options = [];
     foreach ($workflows as $workflow) {
       $description_parts = [$workflow->label()];
       
@@ -96,12 +96,19 @@ class WorkflowListWidget extends WidgetBase implements ContainerFactoryPluginInt
       $options[$workflow->id()] = implode(' ', $description_parts);
     }
 
+    // Get all current values for multi-value field
+    $default_values = [];
+    foreach ($items as $item) {
+      if (!empty($item->value)) {
+        $default_values[] = $item->value;
+      }
+    }
+
     $element['value'] = [
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#options' => $options,
-      '#default_value' => isset($items[$delta]->value) ? $items[$delta]->value : NULL,
-      '#description' => $this->t('Select a workflow list to assign to this content. The workflow tab will display full workflow information.'),
-      '#empty_value' => '',
+      '#default_value' => $default_values,
+      '#description' => $this->t('Select one or more workflows to assign to this content. View full workflow details on the Workflow tab.'),
     ];
 
     // Add a link to create new workflows.
@@ -112,7 +119,31 @@ class WorkflowListWidget extends WidgetBase implements ContainerFactoryPluginInt
       ]) . '</div>',
     ];
 
+    // Add help text about the workflow tab
+    $element['tab_info'] = [
+      '#type' => 'markup',
+      '#markup' => '<div class="description"><em>' . $this->t('Tip: Use the Workflow tab for a detailed table view of all assigned workflows.') . '</em></div>',
+    ];
+
     return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    // Convert checkboxes array to simple values array
+    $new_values = [];
+    foreach ($values as $value) {
+      if (isset($value['value']) && is_array($value['value'])) {
+        // Filter out unchecked items (which have value 0)
+        $checked_items = array_filter($value['value']);
+        foreach ($checked_items as $checked_value) {
+          $new_values[] = ['value' => $checked_value];
+        }
+      }
+    }
+    return $new_values;
   }
 
 }
