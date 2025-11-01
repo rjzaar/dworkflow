@@ -7,12 +7,12 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
- * Provides a field type for referencing users or groups.
+ * Provides a field type for referencing users or groups with title and comment.
  *
  * @FieldType(
  *   id = "dworkflow_assignment",
  *   label = @Translation("Workflow Assignment"),
- *   description = @Translation("References a user or group for workflow assignment."),
+ *   description = @Translation("References a user or group for workflow assignment with title and comment."),
  *   default_widget = "dworkflow_assignment_default",
  *   default_formatter = "dworkflow_assignment_default",
  *   cardinality = \Drupal\Core\Field\FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
@@ -24,6 +24,10 @@ class DWorkflowAssignmentItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
+    $properties['title'] = DataDefinition::create('string')
+      ->setLabel(t('Title'))
+      ->setDescription(t('The title for this assignment.'));
+
     $properties['target_type'] = DataDefinition::create('string')
       ->setLabel(t('Entity type'))
       ->setDescription(t('The entity type (user or group).'))
@@ -34,6 +38,10 @@ class DWorkflowAssignmentItem extends FieldItemBase {
       ->setDescription(t('The entity ID.'))
       ->setRequired(TRUE);
 
+    $properties['comment'] = DataDefinition::create('string')
+      ->setLabel(t('Comment'))
+      ->setDescription(t('Comment from the assignee.'));
+
     return $properties;
   }
 
@@ -43,6 +51,11 @@ class DWorkflowAssignmentItem extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
+        'title' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ],
         'target_type' => [
           'type' => 'varchar',
           'length' => 32,
@@ -52,6 +65,11 @@ class DWorkflowAssignmentItem extends FieldItemBase {
           'type' => 'int',
           'unsigned' => TRUE,
           'not null' => TRUE,
+        ],
+        'comment' => [
+          'type' => 'text',
+          'size' => 'normal',
+          'not null' => FALSE,
         ],
       ],
       'indexes' => [

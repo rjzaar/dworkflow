@@ -1,22 +1,23 @@
-# DWorkflow - Workflow Assignment Field
+# DWorkflow - Enhanced Workflow Assignment Field
 
-A Drupal 10/11 module that provides a **field type** for assigning multiple users and/or groups directly to content for workflow management.
+A Drupal 10/11 module that provides a **field type** for assigning multiple users and/or groups to content with **titles and comments** for workflow management.
 
-## Overview
+## What's New in This Version
 
-This module provides a custom field type that you can add to any content type (or other fieldable entity). The field allows editors to assign multiple users and/or groups to the content, with each assignment specifying whether it's a user or group.
+### Enhanced Features
+- ✨ **Title for each assignment** - Give each workflow assignment a descriptive title
+- 💬 **Comments from assignees** - Add comments or notes for each assignment
+- 📊 **Row-based layout** - All assignment details (title, type, assignee, comment) display on the same row
+- 🎯 **Tab support ready** - Can be placed in a separate tab using Field Group module
 
-**No separate entities needed** - assignments are stored directly on the content as field values.
+### Display Layout
 
-## Features
-
-- **Custom Field Type**: Add "Workflow Assignment" field to any content type
-- **Multi-Value**: Assign multiple users and/or groups to a single piece of content
-- **Type Selection**: Choose User or Group for each assignment
-- **Entity Autocomplete**: Easy search and selection
-- **AJAX Updates**: Type selector dynamically updates autocomplete
-- **Visual Display**: Formatted list with badges showing user/group type
-- **Group Module Support**: Automatically detects and supports Group module
+Each assignment now shows in a clean row format:
+```
+Title          | Type  | Assignee      | Comment
+Review Phase 1 | USER  | editor_jane   | Initial content review
+Final Approval | GROUP | Editorial Team| Ready for publication
+```
 
 ## Requirements
 
@@ -24,128 +25,136 @@ This module provides a custom field type that you can add to any content type (o
 - Node module (core)
 - User module (core)
 - Optional: Group module (for group assignments)
+- **Recommended: Field Group module** (for tab organization)
 
 ## Installation
 
-1. **Copy the module:**
-   ```bash
-   cp -r dworkflow /path/to/drupal/modules/custom/
-   ```
+### 1. Install the Module
 
-2. **Enable the module:**
-   ```bash
-   drush en dworkflow -y
-   drush cr
-   ```
+```bash
+# Copy module to custom modules directory
+cp -r dworkflow /path/to/drupal/modules/custom/
+
+# Enable the module
+drush en dworkflow -y
+drush cr
+```
+
+### 2. Update Existing Installations
+
+If you're upgrading from the previous version, you'll need to update the database:
+
+```bash
+# Update database to add new columns
+drush updb -y
+
+# Clear caches
+drush cr
+```
+
+## Creating a Workflow Tab
+
+To place the workflow field in its own tab, you'll need the **Field Group** module:
+
+### Install Field Group
+
+```bash
+composer require drupal/field_group
+drush en field_group -y
+```
+
+### Configure the Workflow Tab
+
+1. Navigate to **Structure > Content types > [Your Type] > Manage form display**
+   - Example: `/admin/structure/types/manage/article/form-display`
+
+2. Click **Add group** (at the bottom)
+
+3. Configure the group:
+   - **Label**: "Workflow" (or your preferred name)
+   - **Format**: Select "Horizontal tabs" or "Tab" (for vertical tabs)
+   - Click **Create group**
+
+4. **Drag your workflow field** into the new "Workflow" group
+
+5. Configure group settings:
+   - Click the gear icon on the Workflow group
+   - Adjust settings as needed (description, required, etc.)
+   - Save settings
+
+6. **Save** the form display
+
+Now your workflow assignments will appear in their own tab when editing content!
 
 ## Usage
 
 ### Adding the Field to a Content Type
 
 1. Navigate to **Structure > Content types > [Your Type] > Manage fields**
-   - Example: `/admin/structure/types/manage/article/fields`
 
 2. Click **Add field**
 
 3. Under "Add a new field":
    - **Field type**: Select "Workflow Assignment"
-   - **Label**: Enter a label (e.g., "Assigned To", "Workflow Team", "Reviewers")
+   - **Label**: Enter a label (e.g., "Workflow Assignments")
 
-4. Click **Save and continue**
+4. Configure field settings:
+   - **Allowed number of values**: Unlimited (recommended)
 
-5. Configure field settings:
-   - **Allowed number of values**: Unlimited (default and recommended)
-   - Or set a specific limit if needed
+5. Save the field
 
-6. Click **Save field settings**
-
-7. Configure form display settings (optional)
-
-8. Click **Save settings**
-
-### Assigning Users and Groups to Content
+### Assigning Workflow Tasks
 
 When editing content with the workflow assignment field:
 
 1. **For each assignment:**
-   - Select **Type** (User or Group)
-   - Use **autocomplete** to find and select the user or group
-   - Click **Add another item** to add more assignments
+   - **Title**: Enter a descriptive title (e.g., "Initial Review", "Final Approval")
+   - **Type**: Select User or Group
+   - **Assignee**: Use autocomplete to find the user or group
+   - **Comment**: Add any notes or instructions (optional)
 
-2. **Save** the content
+2. Click **Add another item** to add more assignments
 
-### Viewing Assignments
+3. **Save** the content
 
-When viewing content, assigned users and groups are displayed with:
-- **Badges** indicating type (USER or GROUP)
-- **Links** to user/group profiles
-- **Clean formatting** for easy scanning
+### Example Workflow Assignment
 
-## Field Configuration
-
-### Field Settings
-
-- **Allowed number of values**: 
-  - Unlimited (recommended)
-  - Limited (set specific number)
-
-### Form Display
-
-The field uses the "Workflow Assignment Selector" widget:
-- Type dropdown (User/Group)
-- Entity autocomplete
-- AJAX-powered updates
-
-### Display Settings
-
-The field uses the "Workflow Assignment List" formatter:
-- Lists all assignments
-- Shows type badges
-- Links to entities
-- Styled display
-
-## Examples
-
-### Example 1: Article with Review Team
-
-**Content Type:** Article
-
-**Field Label:** "Review Team"
-
-**Assignments:**
 ```
-[USER]  editor_jane
-[USER]  writer_john
-[GROUP] Editorial Team
+Title: Content Review
+Type: User
+Assignee: editor_jane
+Comment: Please review for grammar and style
+
+Title: Technical Review  
+Type: User
+Assignee: tech_lead_bob
+Comment: Check all code snippets and technical accuracy
+
+Title: Final Approval
+Type: Group
+Assignee: Editorial Board
+Comment: Ready for publication decision
 ```
 
-### Example 2: Project with Collaborators
+## Field Display Configuration
 
-**Content Type:** Project
+### Standard Display
 
-**Field Label:** "Collaborators"
+The default formatter displays assignments in a clean table-like format with headers:
 
-**Assignments:**
-```
-[USER]  project_manager
-[USER]  developer_alice
-[USER]  developer_bob
-[GROUP] QA Team
-[GROUP] DevOps Team
-```
+| Title | Type | Assignee | Comment |
+|-------|------|----------|---------|
+| ... | ... | ... | ... |
 
-### Example 3: Event with Organizers
+### Customize Display
 
-**Content Type:** Event
+1. Navigate to **Structure > Content types > [Your Type] > Manage display**
 
-**Field Label:** "Event Organizers"
+2. Find your workflow assignment field
 
-**Assignments:**
-```
-[USER]  event_coordinator
-[GROUP] Volunteers
-[GROUP] Sponsor Committee
-```
+3. Click the gear icon to configure formatter settings
+
+4. Save changes
 
 ## API Usage
 
@@ -155,20 +164,20 @@ The field uses the "Workflow Assignment List" formatter:
 // Load a node
 $node = \Drupal\node\Entity\Node::load(123);
 
-// Check if field exists
+// Get all assignments
 if ($node->hasField('field_workflow_assignment')) {
-  
-  // Get all assignments
   $assignments = $node->get('field_workflow_assignment');
   
   foreach ($assignments as $assignment) {
-    $type = $assignment->target_type;     // 'user' or 'group'
-    $id = $assignment->target_id;         // Entity ID
-    $entity = $assignment->getEntity();   // Loaded entity object
+    $title = $assignment->title;
+    $type = $assignment->target_type;
+    $id = $assignment->target_id;
+    $comment = $assignment->comment;
+    $entity = $assignment->getEntity();
     
     if ($entity) {
       $name = $entity->label();
-      echo "{$type}: {$name} (ID: {$id})\n";
+      echo "[$title] {$type}: {$name} - {$comment}\n";
     }
   }
 }
@@ -179,268 +188,229 @@ if ($node->hasField('field_workflow_assignment')) {
 ```php
 use Drupal\node\Entity\Node;
 
-// Load or create node
 $node = Node::load(123);
 
-// Add assignments
+// Add assignment with title and comment
 $node->field_workflow_assignment[] = [
+  'title' => 'Initial Review',
   'target_type' => 'user',
   'target_id' => 5,
+  'comment' => 'Please review by end of week',
 ];
 
 $node->field_workflow_assignment[] = [
+  'title' => 'Technical Approval',
   'target_type' => 'group',
   'target_id' => 3,
-];
-
-$node->field_workflow_assignment[] = [
-  'target_type' => 'user',
-  'target_id' => 12,
+  'comment' => 'Final technical sign-off required',
 ];
 
 $node->save();
 ```
 
-### Querying Content by Assignment
+### Querying by Assignment Title
 
 ```php
-// Find all nodes assigned to user 5
+// Find all nodes with "Final Approval" assignments
 $query = \Drupal::entityQuery('node')
-  ->condition('field_workflow_assignment.target_type', 'user')
-  ->condition('field_workflow_assignment.target_id', 5)
-  ->accessCheck(TRUE);
-
-$nids = $query->execute();
-
-// Find all nodes assigned to group 3
-$query = \Drupal::entityQuery('node')
-  ->condition('field_workflow_assignment.target_type', 'group')
-  ->condition('field_workflow_assignment.target_id', 3)
+  ->condition('field_workflow_assignment.title', 'Final Approval', 'CONTAINS')
   ->accessCheck(TRUE);
 
 $nids = $query->execute();
 ```
 
-### Getting All Users Assigned
+## Database Structure
 
-```php
-$users = [];
-$assignments = $node->get('field_workflow_assignment');
-
-foreach ($assignments as $assignment) {
-  if ($assignment->target_type === 'user') {
-    $users[] = $assignment->target_id;
-  }
-}
-
-// Load all user entities at once
-$user_entities = \Drupal::entityTypeManager()
-  ->getStorage('user')
-  ->loadMultiple($users);
-```
-
-### Getting All Groups Assigned
-
-```php
-$groups = [];
-$assignments = $node->get('field_workflow_assignment');
-
-foreach ($assignments as $assignment) {
-  if ($assignment->target_type === 'group') {
-    $groups[] = $assignment->target_id;
-  }
-}
-
-// Load all group entities
-if (!empty($groups)) {
-  $group_entities = \Drupal::entityTypeManager()
-    ->getStorage('group')
-    ->loadMultiple($groups);
-}
-```
-
-## Use Cases
-
-### 1. Editorial Workflow
-Add field to Article content type to track who needs to review/approve content.
-
-### 2. Project Management
-Add field to Project content type to assign team members and departments.
-
-### 3. Task Assignment
-Add field to Task content type to assign responsible users and groups.
-
-### 4. Event Organization
-Add field to Event content type to track organizers and volunteer teams.
-
-### 5. Document Collaboration
-Add field to Document content type to manage who can collaborate.
-
-## Advantages
-
-### Simple Integration
-- Just add the field to your content type
-- No complex configuration needed
-- Works like any other field
-
-### Flexible
-- Use on any fieldable entity (nodes, terms, custom entities)
-- Set per-entity-type field labels
-- Configure number of values allowed
-
-### Powerful
-- Reference users and groups in one field
-- Query by assignment
-- Full entity access (name, email, etc.)
-
-### User-Friendly
-- Clear type selection
-- Easy autocomplete
-- Visual badges
-- No training needed
-
-## Field Storage
-
-Assignments are stored directly in the field table:
+### Updated Field Table
 
 ```sql
--- Field table: node__field_workflow_assignment
 CREATE TABLE node__field_workflow_assignment (
   entity_id INT,
   revision_id INT,
   delta INT,
+  field_workflow_assignment_title VARCHAR(255),      -- NEW
   field_workflow_assignment_target_type VARCHAR(32),
   field_workflow_assignment_target_id INT,
+  field_workflow_assignment_comment TEXT,            -- NEW
   ...
 );
-
--- Example data:
--- entity_id=123, delta=0, target_type='user', target_id=5
--- entity_id=123, delta=1, target_type='group', target_id=3
--- entity_id=123, delta=2, target_type='user', target_id=12
 ```
 
-## Group Module Integration
+### Example Data
 
-If the Group module is installed and enabled:
-- The "Group" option appears in the type selector
-- Group autocomplete works automatically
-- Group entities are loaded and displayed
-- No additional configuration needed
+```
+entity_id=123, delta=0:
+  title='Content Review'
+  target_type='user'
+  target_id=5
+  comment='Check grammar and style'
 
-## Permissions
+entity_id=123, delta=1:
+  title='Technical Review'
+  target_type='group'
+  target_id=3
+  comment='Verify all technical details'
+```
 
-Field access is controlled by standard Drupal field permissions:
+## Styling and Theming
 
-- **Edit own [field]**: Users can edit assignments on their own content
-- **Edit any [field]**: Users can edit assignments on any content
-- **View [field]**: Users can view assignments
+### Override Template
 
-Configure via **People > Permissions** or using modules like Field Permissions.
-
-## Theming
-
-### Template
-
-Override the template: `templates/dworkflow-assignment-list.html.twig`
+Template file: `templates/dworkflow-assignment-list.html.twig`
 
 Available variables:
 ```twig
 assignments: [
   {
+    title: 'Assignment title',
     type: 'user' or 'group',
     entity: Entity object,
     label: Entity label,
-    url: Entity URL
+    url: Entity URL,
+    comment: 'Assignee comment'
   }
 ]
 ```
 
-### CSS
+### CSS Classes
 
-Override styles by targeting:
+The module provides extensive CSS classes for styling:
+
 ```css
+/* Main containers */
 .dworkflow-assignments { }
 .dworkflow-assignment-list { }
+
+/* Individual assignment rows */
 .dworkflow-assignment-item { }
+.dworkflow-assignment-title { }
+.dworkflow-assignment-type { }
+.dworkflow-assignment-assignee { }
+.dworkflow-assignment-comment { }
+
+/* Type badges */
 .dworkflow-badge { }
 .dworkflow-badge--user { }
 .dworkflow-badge--group { }
+
+/* Form widgets */
+.dworkflow-assignment-row { }
+.dworkflow-title-field { }
+.dworkflow-type-field { }
+.dworkflow-assignee-field { }
+.dworkflow-comment-field { }
 ```
 
-## Uninstallation
+### Responsive Design
 
-To remove the module:
+The layout automatically adapts to mobile devices, stacking fields vertically on smaller screens.
 
-1. **Remove the field from all content types:**
-   - Structure > Content types > [Type] > Manage fields
-   - Delete the workflow assignment field
-   - Repeat for all content types using the field
+## Use Cases
 
-2. **Uninstall the module:**
-   ```bash
-   drush pmu dworkflow -y
-   ```
+### 1. Editorial Workflow
+```
+Title: Copy Edit → Type: User → Assignee: copy_editor → Comment: Check AP style
+Title: Fact Check → Type: User → Assignee: fact_checker → Comment: Verify all sources
+Title: Final Review → Type: Group → Assignee: Editors → Comment: Ready for publication
+```
 
-**Note:** Removing the field will delete all assignment data!
+### 2. Project Management
+```
+Title: Development → Type: User → Assignee: developer_alice → Comment: Backend API
+Title: Frontend → Type: User → Assignee: developer_bob → Comment: React components
+Title: QA Testing → Type: Group → Assignee: QA Team → Comment: Full regression test
+```
+
+### 3. Document Approval
+```
+Title: Legal Review → Type: User → Assignee: legal_counsel → Comment: Contract terms
+Title: Finance Approval → Type: User → Assignee: cfo → Comment: Budget approval
+Title: CEO Sign-off → Type: User → Assignee: ceo → Comment: Final authorization
+```
+
+### 4. Event Planning
+```
+Title: Venue Booking → Type: User → Assignee: coordinator → Comment: Confirm by March 1
+Title: Catering → Type: Group → Assignee: Catering Team → Comment: 150 guests
+Title: Marketing → Type: Group → Assignee: Marketing → Comment: Social media campaign
+```
+
+## Migration from Previous Version
+
+If you're upgrading from the previous version without title and comment fields:
+
+### Step 1: Backup Your Database
+```bash
+drush sql:dump > backup.sql
+```
+
+### Step 2: Run Update
+```bash
+drush updb -y
+```
+
+### Step 3: Existing Data
+- Existing assignments will remain intact
+- Title and comment fields will be empty
+- You can edit existing content to add titles and comments
 
 ## Troubleshooting
 
-### Field doesn't appear in field type list
+### Field doesn't update after upgrade
+```bash
+drush cr
+drush entity:updates
+drush updb -y
+```
 
+### Tabs don't appear
+- Install Field Group module: `composer require drupal/field_group`
+- Configure tab groups in form display settings
+
+### Layout issues
 - Clear caches: `drush cr`
-- Verify module is enabled: `drush pml | grep dworkflow`
+- Check theme compatibility
+- Review browser console for CSS conflicts
 
-### Group option doesn't appear
+### Empty titles or comments display oddly
+The CSS includes placeholder styling (—) for empty values. Override in your theme if needed.
 
-- Install and enable Group module
-- Clear caches: `drush cr`
+## Performance Considerations
 
-### AJAX not working
+### For Large Numbers of Assignments
+- The field uses database indexes on target_type and target_id
+- Consider limiting the number of values if you have thousands of assignments
+- Use Views for complex queries across multiple nodes
 
-- Clear caches: `drush cr`
-- Check browser console for JavaScript errors
-- Verify jQuery is loaded
+### Caching
+- Field values are cached with the parent entity
+- Clear cache after programmatic updates
 
-### Entities not loading
+## Permissions
 
-- Check entity IDs are valid
-- Verify entities haven't been deleted
-- Check entity access permissions
+Standard Drupal field permissions apply:
+- **Edit own [field]**: Users can edit assignments on their own content
+- **Edit any [field]**: Users can edit assignments on any content  
+- **View [field]**: Users can view assignments
 
-## Technical Details
+Configure via **People > Permissions** or Field Permissions module.
 
-### Field Type
+## Support and Contributing
 
-- **ID**: `dworkflow_assignment`
-- **Cardinality**: Unlimited
-- **Properties**: `target_type` (string), `target_id` (integer)
-- **Storage**: Database table per entity type
+### Documentation
+- [Drupal Field API](https://www.drupal.org/docs/drupal-apis/entity-api/fieldtypes-fieldwidgets-and-fieldformatters)
+- [Field Group Module](https://www.drupal.org/project/field_group)
 
-### Widget
+### Known Issues
+- None currently reported
 
-- **ID**: `dworkflow_assignment_default`
-- **Type**: Select + Entity Autocomplete
-- **AJAX**: Yes (type selector updates autocomplete)
-
-### Formatter
-
-- **ID**: `dworkflow_assignment_default`
-- **Output**: Themed list with badges
-- **Links**: Yes (to entity pages)
-
-## Support
-
-For issues, questions, or contributions:
-
-1. Check this documentation
-2. Review Drupal.org documentation on custom field types
-3. Check the Field API documentation
+### Feature Requests
+Submit via your project's issue tracker
 
 ## License
 
 GPL-2.0-or-later
 
-## Author
+## Credits
 
-Designed for flexible workflow management in Drupal 10/11.
+Enhanced workflow management for Drupal 10/11 with title and comment support.

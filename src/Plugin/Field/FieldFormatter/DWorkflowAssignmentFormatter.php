@@ -35,10 +35,12 @@ class DWorkflowAssignmentFormatter extends FormatterBase {
       
       if ($entity) {
         $assignments[] = [
+          'title' => $item->title ?? '',
           'type' => $item->target_type,
           'entity' => $entity,
           'label' => $entity->label(),
           'url' => $entity->toUrl()->toString(),
+          'comment' => $item->comment ?? '',
         ];
       }
     }

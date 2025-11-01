@@ -5,23 +5,46 @@
  *
  * Available variables:
  * - assignments: Array of assignment information:
+ *   - title: Assignment title
  *   - type: 'user' or 'group'
  *   - entity: The loaded entity object
  *   - label: The entity label
  *   - url: The entity URL
+ *   - comment: Comment from assignee
  */
 #}
 <div class="dworkflow-assignments">
-  <h4>{{ 'Assigned Users and Groups'|t }}</h4>
+  <h4>{{ 'Workflow Assignments'|t }}</h4>
+  
+  <div class="dworkflow-assignment-header">
+    <div>{{ 'Title'|t }}</div>
+    <div>{{ 'Type'|t }}</div>
+    <div>{{ 'Assignee'|t }}</div>
+    <div>{{ 'Comment'|t }}</div>
+  </div>
+  
   <ul class="dworkflow-assignment-list">
   {% for assignment in assignments %}
     <li class="dworkflow-assignment-item dworkflow-assignment-item--{{ assignment.type }}">
-      <span class="dworkflow-badge dworkflow-badge--{{ assignment.type }}">
-        {{ assignment.type|upper }}
-      </span>
-      <a href="{{ assignment.url }}" class="dworkflow-assignment-link">
-        {{ assignment.label }}
-      </a>
+      <div class="dworkflow-assignment-title">
+        {{ assignment.title }}
+      </div>
+      
+      <div class="dworkflow-assignment-type">
+        <span class="dworkflow-badge dworkflow-badge--{{ assignment.type }}">
+          {{ assignment.type|upper }}
+        </span>
+      </div>
+      
+      <div class="dworkflow-assignment-assignee">
+        <a href="{{ assignment.url }}" class="dworkflow-assignment-link">
+          {{ assignment.label }}
+        </a>
+      </div>
+      
+      <div class="dworkflow-assignment-comment">
+        {{ assignment.comment }}
+      </div>
     </li>
   {% endfor %}
   </ul>

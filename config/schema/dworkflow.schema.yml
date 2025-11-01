@@ -2,12 +2,18 @@ field.storage.dworkflow_assignment:
   type: mapping
   label: 'Workflow Assignment field storage'
   mapping:
+    title:
+      type: string
+      label: 'Assignment title'
     target_type:
       type: string
       label: 'Entity type'
     target_id:
       type: integer
       label: 'Entity ID'
+    comment:
+      type: text
+      label: 'Assignee comment'
 
 field.field.dworkflow_assignment:
   type: field.field.entity_reference

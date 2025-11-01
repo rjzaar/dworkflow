@@ -27,11 +27,13 @@ class DWorkflowAssignmentWidget extends WidgetBase {
 
     $element['#type'] = 'container';
     $element['#attributes']['class'][] = 'dworkflow-assignment-widget';
-    $element['#attributes']['class'][] = 'container-inline';
+    $element['#attributes']['class'][] = 'dworkflow-assignment-row';
 
     // Get current values
+    $title = $item->title ?? '';
     $target_type = $item->target_type ?: 'user';
     $target_id = $item->target_id;
+    $comment = $item->comment ?? '';
 
     // Load entity if we have an ID
     $default_entity = NULL;
@@ -49,6 +51,18 @@ class DWorkflowAssignmentWidget extends WidgetBase {
     // Check if Group module is available
     $group_module_exists = \Drupal::moduleHandler()->moduleExists('group');
 
+    // Title field
+    $element['title'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Title'),
+      '#default_value' => $title,
+      '#size' => 30,
+      '#placeholder' => $this->t('Assignment title...'),
+      '#attributes' => [
+        'class' => ['dworkflow-title-field'],
+      ],
+    ];
+
     // Type selector
     $element['target_type'] = [
       '#type' => 'select',
@@ -61,6 +75,9 @@ class DWorkflowAssignmentWidget extends WidgetBase {
         'wrapper' => 'dworkflow-autocomplete-' . $delta,
         'event' => 'change',
       ],
+      '#attributes' => [
+        'class' => ['dworkflow-type-field'],
+      ],
     ];
 
     // Get the selected type (from form state if AJAX, otherwise default)
@@ -71,18 +88,32 @@ class DWorkflowAssignmentWidget extends WidgetBase {
     ]);
     $selected_type = $form_state->getValue($parents) ?: $target_type;
 
-    // Entity autocomplete
+    // Entity autocomplete (Assignee)
     $element['target_id'] = [
       '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Select @type', ['@type' => $this->getEntityTypeLabel($selected_type)]),
-      '#title_display' => 'invisible',
+      '#title' => $this->t('Assignee'),
       '#target_type' => $selected_type,
       '#default_value' => $default_entity,
       '#required' => $element['#required'],
       '#prefix' => '<div id="dworkflow-autocomplete-' . $delta . '">',
       '#suffix' => '</div>',
-      '#size' => 60,
-      '#placeholder' => $this->t('Start typing to search...'),
+      '#size' => 30,
+      '#placeholder' => $this->t('Start typing...'),
+      '#attributes' => [
+        'class' => ['dworkflow-assignee-field'],
+      ],
+    ];
+
+    // Comment field
+    $element['comment'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Comment'),
+      '#default_value' => $comment,
+      '#size' => 40,
+      '#placeholder' => $this->t('Add a comment...'),
+      '#attributes' => [
+        'class' => ['dworkflow-comment-field'],
+      ],
     ];
 
     return $element;
@@ -143,6 +174,9 @@ class DWorkflowAssignmentWidget extends WidgetBase {
       else {
         // Ensure target_id is an integer
         $values[$delta]['target_id'] = (int) $value['target_id'];
+        // Keep title and comment as strings
+        $values[$delta]['title'] = $value['title'] ?? '';
+        $values[$delta]['comment'] = $value['comment'] ?? '';
       }
     }
     

@@ -14,13 +14,13 @@ function dworkflow_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.dworkflow':
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('DWorkflow provides a field type that allows you to assign multiple users and/or groups to content for workflow management.') . '</p>';
+      $output .= '<p>' . t('DWorkflow provides a field type that allows you to assign multiple users and/or groups to content for workflow management with titles and comments.') . '</p>';
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Adding Workflow Fields') . '</dt>';
-      $output .= '<dd>' . t('Add a "Workflow Assignment" field to any content type. This field allows you to select multiple users and/or groups who should be assigned to the content.') . '</dd>';
+      $output .= '<dd>' . t('Add a "Workflow Assignment" field to any content type. This field allows you to select multiple users and/or groups who should be assigned to the content, along with a title and comment for each assignment.') . '</dd>';
       $output .= '<dt>' . t('Assigning Users and Groups') . '</dt>';
-      $output .= '<dd>' . t('When editing content with a workflow assignment field, you can add multiple assignments. For each assignment, select whether it\'s a User or Group, then use the autocomplete to find and select the specific user or group.') . '</dd>';
+      $output .= '<dd>' . t('When editing content with a workflow assignment field, you can add multiple assignments. For each assignment, provide a title, select whether it\'s a User or Group, use the autocomplete to find the assignee, and add an optional comment.') . '</dd>';
       $output .= '</dl>';
       return $output;
   }
