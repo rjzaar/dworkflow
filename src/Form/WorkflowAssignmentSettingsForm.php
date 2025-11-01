@@ -179,8 +179,9 @@ class WorkflowAssignmentSettingsForm extends ConfigFormBase {
           
           if ($form_display) {
             $form_display->setComponent('field_workflow_list', [
-              'type' => 'options_select',
+              'type' => 'workflow_list_widget',
               'weight' => 100,
+              'settings' => [],
             ])->save();
           }
 
