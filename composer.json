@@ -1,0 +1,24 @@
+{
+  "name": "drupal/workflow_assignment",
+  "description": "Provides flexible workflow assignment functionality for Drupal content with on-the-fly user, group, and resource location management.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://github.com/rjzaar/dworkflow",
+  "authors": [
+    {
+      "name": "rjzaar",
+      "homepage": "https://github.com/rjzaar"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/rjzaar/dworkflow/issues",
+    "source": "https://github.com/rjzaar/dworkflow"
+  },
+  "require": {
+    "php": ">=8.1",
+    "drupal/core": "^10",
+    "drupal/twig_tweak": "^3.0"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
