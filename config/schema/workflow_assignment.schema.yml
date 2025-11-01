@@ -1,0 +1,63 @@
+workflow_assignment.settings:
+  type: config_object
+  label: 'Workflow Assignment settings'
+  mapping:
+    enabled_content_types:
+      type: sequence
+      label: 'Enabled content types'
+      sequence:
+        type: string
+        label: 'Content type'
+    resource_vocabulary:
+      type: string
+      label: 'Resource location vocabulary'
+    destination_vocabulary:
+      type: string
+      label: 'Destination location vocabulary'
+    show_workflow_tab:
+      type: boolean
+      label: 'Show workflow tab'
+
+workflow_assignment.workflow_list.*:
+  type: config_entity
+  label: 'Workflow List'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Description'
+    assigned_users:
+      type: sequence
+      label: 'Assigned users'
+      sequence:
+        type: integer
+        label: 'User ID'
+    assigned_groups:
+      type: sequence
+      label: 'Assigned groups'
+      sequence:
+        type: integer
+        label: 'Group ID'
+    resource_tags:
+      type: sequence
+      label: 'Resource location tags'
+      sequence:
+        type: integer
+        label: 'Term ID'
+    destination_tags:
+      type: sequence
+      label: 'Destination location tags'
+      sequence:
+        type: integer
+        label: 'Term ID'
+    created:
+      type: timestamp
+      label: 'Created timestamp'
+    changed:
+      type: timestamp
+      label: 'Changed timestamp'

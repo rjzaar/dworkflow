@@ -1,0 +1,93 @@
+{#
+/**
+ * @file
+ * Template for displaying workflow information on the workflow tab.
+ *
+ * Available variables:
+ * - workflow: The workflow list entity.
+ * - node: The node entity.
+ * - can_edit: Boolean indicating if user can edit workflow.
+ */
+#}
+<div class="workflow-tab-content">
+  <div class="workflow-section">
+    <h3>{{ 'Workflow Information'|t }}</h3>
+    
+    <div class="workflow-details">
+      <div class="workflow-field">
+        <strong>{{ 'Name:'|t }}</strong>
+        <span>{{ workflow.label }}</span>
+      </div>
+
+      {% if workflow.description %}
+        <div class="workflow-field">
+          <strong>{{ 'Description:'|t }}</strong>
+          <div>{{ workflow.description }}</div>
+        </div>
+      {% endif %}
+
+      {% set assigned_users = workflow.getAssignedUsers() %}
+      {% if assigned_users is not empty %}
+        <div class="workflow-field">
+          <strong>{{ 'Assigned Users:'|t }}</strong>
+          <ul class="workflow-list">
+            {% for uid in assigned_users %}
+              {% set user = drupal_entity('user', uid) %}
+              {% if user %}
+                <li>{{ user.getDisplayName() }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% set assigned_groups = workflow.getAssignedGroups() %}
+      {% if assigned_groups is not empty %}
+        <div class="workflow-field">
+          <strong>{{ 'Assigned Groups:'|t }}</strong>
+          <ul class="workflow-list">
+            {% for gid in assigned_groups %}
+              {% set group = drupal_entity('group', gid) %}
+              {% if group %}
+                <li>{{ group.label }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% set resource_tags = workflow.getResourceTags() %}
+      {% if resource_tags is not empty %}
+        <div class="workflow-field">
+          <strong>{{ 'Resource Locations:'|t }}</strong>
+          <ul class="workflow-list">
+            {% for tid in resource_tags %}
+              {% set term = drupal_entity('taxonomy_term', tid) %}
+              {% if term %}
+                <li>{{ term.name }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% set destination_tags = workflow.getDestinationTags() %}
+      {% if destination_tags is not empty %}
+        <div class="workflow-field workflow-field--destinations">
+          <strong>{{ 'Destination Locations:'|t }}</strong>
+          <ul class="workflow-list workflow-list--destinations">
+            {% for tid in destination_tags %}
+              {% set term = drupal_entity('taxonomy_term', tid) %}
+              {% if term %}
+                <li class="destination-tag destination-tag--{{ term.name|lower }}">
+                  <span class="destination-icon">📍</span>
+                  {{ term.name }}
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

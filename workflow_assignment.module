@@ -1,0 +1,110 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Workflow Assignment module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_help().
+ */
+function workflow_assignment_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.workflow_assignment':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Workflow Assignment module provides a flexible workflow system where you can create workflow lists with assigned users, groups, and destination locations.') . '</p>';
+      $output .= '<h3>' . t('Features') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Create custom workflow lists with users and groups') . '</li>';
+      $output .= '<li>' . t('Tag workflows with resource and destination locations') . '</li>';
+      $output .= '<li>' . t('Separate Workflow tab on content pages for easy management') . '</li>';
+      $output .= '<li>' . t('Default destination locations: Public and Private') . '</li>';
+      $output .= '<li>' . t('Assign workflows to content on-the-fly') . '</li>';
+      $output .= '</ul>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function workflow_assignment_theme() {
+  return [
+    'workflow_info_block' => [
+      'variables' => [
+        'workflow' => NULL,
+        'node' => NULL,
+      ],
+    ],
+    'workflow_tab_content' => [
+      'variables' => [
+        'workflow' => NULL,
+        'node' => NULL,
+        'can_edit' => FALSE,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_node_access().
+ *
+ * Custom access check for workflow tab visibility.
+ */
+function workflow_assignment_node_access(NodeInterface $node, $op, AccountInterface $account) {
+  // No opinion on node access.
+  return AccessResult::neutral();
+}
+
+/**
+ * Custom access callback for workflow tab.
+ */
+function workflow_assignment_node_has_workflow_field(NodeInterface $node) {
+  $config = \Drupal::config('workflow_assignment.settings');
+  $enabled_types = $config->get('enabled_content_types') ?: [];
+  
+  // Check if this content type is enabled for workflows.
+  if (in_array($node->bundle(), $enabled_types)) {
+    return AccessResult::allowed();
+  }
+  
+  return AccessResult::forbidden();
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function workflow_assignment_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  
+  if ($entity->getEntityTypeId() === 'workflow_list') {
+    $operations['quick_edit'] = [
+      'title' => t('Quick Edit'),
+      'url' => \Drupal\Core\Url::fromRoute('workflow_assignment.quick_edit', [
+        'workflow_list' => $entity->id(),
+      ]),
+      'weight' => 10,
+    ];
+  }
+  
+  return $operations;
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function workflow_assignment_entity_type_alter(array &$entity_types) {
+  // Add route provider for workflow_list entity.
+  if (isset($entity_types['workflow_list'])) {
+    $entity_types['workflow_list']->setLinkTemplate('collection', '/admin/structure/workflow-list');
+    $entity_types['workflow_list']->setLinkTemplate('add-form', '/admin/structure/workflow-list/add');
+    $entity_types['workflow_list']->setLinkTemplate('edit-form', '/admin/structure/workflow-list/{workflow_list}/edit');
+    $entity_types['workflow_list']->setLinkTemplate('delete-form', '/admin/structure/workflow-list/{workflow_list}/delete');
+  }
+}

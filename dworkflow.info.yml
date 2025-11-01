@@ -1,9 +1,0 @@
-name: DWorkflow
-type: module
-description: 'Provides a field to assign multiple users and/or groups to content for workflow management with titles and comments.'
-core_version_requirement: ^10 || ^11
-package: Workflow
-
-dependencies:
-  - drupal:node
-  - drupal:user

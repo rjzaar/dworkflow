@@ -1,0 +1,127 @@
+/**
+ * @file
+ * Styles for the Workflow Assignment module.
+ */
+
+.workflow-tab-content {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.workflow-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  border-bottom: 2px solid #0074bd;
+  padding-bottom: 10px;
+}
+
+.workflow-details {
+  background: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-field {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-left: 3px solid #0074bd;
+  background: #f5f5f5;
+}
+
+.workflow-field:last-child {
+  margin-bottom: 0;
+}
+
+.workflow-field strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #0074bd;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workflow-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.workflow-list li {
+  padding: 6px 12px;
+  margin-bottom: 5px;
+  background: #fff;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+}
+
+.workflow-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Special styling for destination locations */
+.workflow-field--destinations {
+  border-left-color: #28a745;
+}
+
+.workflow-field--destinations strong {
+  color: #28a745;
+}
+
+.workflow-list--destinations li {
+  background: #e8f5e9;
+  border-color: #c8e6c9;
+  font-weight: 500;
+}
+
+.destination-tag {
+  display: flex;
+  align-items: center;
+}
+
+.destination-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.destination-tag--public {
+  background: #e3f2fd !important;
+  border-color: #90caf9 !important;
+  color: #1976d2;
+}
+
+.destination-tag--private {
+  background: #fce4ec !important;
+  border-color: #f48fb1 !important;
+  color: #c2185b;
+}
+
+/* Button styling */
+.button--primary {
+  background-color: #0074bd;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 15px;
+  transition: background-color 0.3s;
+}
+
+.button--primary:hover {
+  background-color: #005a8d;
+  color: #fff;
+}
+
+/* No workflow message */
+.no-workflow-message {
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}

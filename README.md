@@ -1,416 +1,462 @@
-# DWorkflow - Enhanced Workflow Assignment Field
+# Workflow Assignment Module - IMPROVED VERSION
 
-A Drupal 10/11 module that provides a **field type** for assigning multiple users and/or groups to content with **titles and comments** for workflow management.
+A custom Drupal 10+ module that provides a flexible workflow system with dedicated workflow tabs and destination location support.
 
-## What's New in This Version
+## 🆕 NEW FEATURES IN THIS IMPROVED VERSION
 
-### Enhanced Features
-- ✨ **Title for each assignment** - Give each workflow assignment a descriptive title
-- 💬 **Comments from assignees** - Add comments or notes for each assignment
-- 📊 **Row-based layout** - All assignment details (title, type, assignee, comment) display on the same row
-- 🎯 **Tab support ready** - Can be placed in a separate tab using Field Group module
+### 1. **Dedicated Workflow Tab**
+- Workflows now appear on their own separate tab on content pages
+- Clean, organized interface specifically for workflow management
+- Easy access without cluttering the main content view
+- Tab only appears on content types that have workflows enabled
 
-### Display Layout
+### 2. **Destination Location System**
+- New "Destination Locations" taxonomy vocabulary
+- **Two default destination locations pre-configured:**
+  - **Public** - For publicly accessible content destinations
+  - **Private** - For restricted/private content destinations
+- Easily add more destination locations as needed
+- Visual distinction between Public and Private in the UI
 
-Each assignment now shows in a clean row format:
-```
-Title          | Type  | Assignee      | Comment
-Review Phase 1 | USER  | editor_jane   | Initial content review
-Final Approval | GROUP | Editorial Team| Ready for publication
-```
+### 3. **Enhanced User Interface**
+- Improved styling with color-coded destination tags
+- Visual icons for destination locations (📍)
+- Better organization of workflow information
+- Responsive and modern design
+
+## Features
+
+### Core Functionality
+- ✅ Create Custom Workflow Lists with descriptions
+- ✅ Assign Users to workflows dynamically
+- ✅ Assign Groups to workflows (Open Social/Group module support)
+- ✅ Tag workflows with Resource Locations
+- ✅ **NEW:** Tag workflows with Destination Locations
+- ✅ **NEW:** Separate Workflow tab on content pages
+- ✅ On-the-Fly workflow modifications
+- ✅ Quick Edit interface for rapid changes
+- ✅ Visual workflow information display
+
+### Destination Locations
+The destination location feature allows you to specify where workflow content should be published or made available:
+
+- **Public Destination**: Content available to all users
+- **Private Destination**: Content with restricted access
+- **Custom Destinations**: Add your own destination types
 
 ## Requirements
 
 - Drupal 10.x or 11.x
 - Node module (core)
+- Taxonomy module (core)
 - User module (core)
 - Optional: Group module (for group assignments)
-- **Recommended: Field Group module** (for tab organization)
 
 ## Installation
 
-### 1. Install the Module
+1. **Copy Module Files**
+   ```bash
+   cp -r workflow_assignment /path/to/drupal/modules/custom/
+   ```
 
-```bash
-# Copy module to custom modules directory
-cp -r dworkflow /path/to/drupal/modules/custom/
+2. **Enable the Module**
+   ```bash
+   drush en workflow_assignment -y
+   drush cr
+   ```
 
-# Enable the module
-drush en dworkflow -y
-drush cr
-```
+3. **Verify Installation**
+   - Check that the Resource Locations vocabulary was created
+   - Check that the Destination Locations vocabulary was created with Public and Private terms
+   - Navigate to Configuration > Workflow > Workflow Assignment
 
-### 2. Update Existing Installations
+## Configuration
 
-If you're upgrading from the previous version, you'll need to update the database:
+### Step 1: Configure Content Types
 
-```bash
-# Update database to add new columns
-drush updb -y
+1. Go to: `/admin/config/workflow/workflow-assignment`
+2. Select which content types should have workflow support
+3. Choose the taxonomy vocabularies for:
+   - Resource Locations (default: resource_locations)
+   - Destination Locations (default: destination_locations)
+4. Save configuration
 
-# Clear caches
-drush cr
-```
+The workflow field will automatically be added to selected content types.
 
-## Creating a Workflow Tab
+### Step 2: Set Up Resource Locations
 
-To place the workflow field in its own tab, you'll need the **Field Group** module:
+1. Go to: `/admin/structure/taxonomy/manage/resource_locations`
+2. Add terms for your resource locations, such as:
+   - Google Drive - Marketing Folder
+   - Project Server - /projects/q1
+   - SharePoint Site
+   - GitHub Repository
 
-### Install Field Group
+### Step 3: Manage Destination Locations
 
-```bash
-composer require drupal/field_group
-drush en field_group -y
-```
+1. Go to: `/admin/structure/taxonomy/manage/destination_locations`
+2. The default terms (Public and Private) are already created
+3. Add additional destination locations as needed:
+   - Internal Wiki
+   - Customer Portal
+   - Partner Site
+   - etc.
 
-### Configure the Workflow Tab
+### Step 4: Create Workflow Lists
 
-1. Navigate to **Structure > Content types > [Your Type] > Manage form display**
-   - Example: `/admin/structure/types/manage/article/form-display`
-
-2. Click **Add group** (at the bottom)
-
-3. Configure the group:
-   - **Label**: "Workflow" (or your preferred name)
-   - **Format**: Select "Horizontal tabs" or "Tab" (for vertical tabs)
-   - Click **Create group**
-
-4. **Drag your workflow field** into the new "Workflow" group
-
-5. Configure group settings:
-   - Click the gear icon on the Workflow group
-   - Adjust settings as needed (description, required, etc.)
-   - Save settings
-
-6. **Save** the form display
-
-Now your workflow assignments will appear in their own tab when editing content!
+1. Go to: `/admin/structure/workflow-list`
+2. Click "Add Workflow List"
+3. Fill in:
+   - **Name**: Descriptive workflow name
+   - **Description**: Optional details
+   - **Assigned Users**: Select team members
+   - **Assigned Groups**: Select groups (if applicable)
+   - **Resource Location Tags**: Where resources are stored
+   - **Destination Locations**: Where content will be published (Public/Private/etc.)
+4. Save
 
 ## Usage
 
-### Adding the Field to a Content Type
+### Accessing the Workflow Tab
 
-1. Navigate to **Structure > Content types > [Your Type] > Manage fields**
+1. Navigate to any content item that has workflows enabled
+2. Click the **"Workflow"** tab (appears next to View/Edit tabs)
+3. View all workflow information in one organized place
+4. Click "Assign Workflow" or "Change Workflow" to modify
 
-2. Click **Add field**
+### Assigning Workflows to Content
 
-3. Under "Add a new field":
-   - **Field type**: Select "Workflow Assignment"
-   - **Label**: Enter a label (e.g., "Workflow Assignments")
+**Method 1: From Content Edit Form**
+- Edit your content
+- Find the "Workflow List" field
+- Select a workflow
+- Save
 
-4. Configure field settings:
-   - **Allowed number of values**: Unlimited (recommended)
+**Method 2: From the Workflow Tab** (Recommended)
+- Go to content page
+- Click "Workflow" tab
+- Click "Assign Workflow" button
+- Select workflow from dropdown
+- Save
 
-5. Save the field
+### Quick Editing Workflows
 
-### Assigning Workflow Tasks
+**Fastest method to update workflow assignments:**
 
-When editing content with the workflow assignment field:
+1. Go to: `/admin/structure/workflow-list`
+2. Click "Quick Edit" on any workflow
+3. Modify:
+   - Assigned users
+   - Assigned groups
+   - Resource locations
+   - **NEW:** Destination locations
+4. Click "Update Workflow"
 
-1. **For each assignment:**
-   - **Title**: Enter a descriptive title (e.g., "Initial Review", "Final Approval")
-   - **Type**: Select User or Group
-   - **Assignee**: Use autocomplete to find the user or group
-   - **Comment**: Add any notes or instructions (optional)
+Changes apply immediately to all content using this workflow.
 
-2. Click **Add another item** to add more assignments
+### Viewing Workflow Information
 
-3. **Save** the content
+When viewing content with an assigned workflow, the Workflow tab displays:
 
-### Example Workflow Assignment
+- Workflow name and description
+- Assigned users (with full names)
+- Assigned groups
+- Resource locations
+- **NEW:** Destination locations with visual indicators
+
+#### Example Display:
 
 ```
-Title: Content Review
-Type: User
-Assignee: editor_jane
-Comment: Please review for grammar and style
+Workflow Information
+-------------------
+Name: Q1 Marketing Campaign
 
-Title: Technical Review  
-Type: User
-Assignee: tech_lead_bob
-Comment: Check all code snippets and technical accuracy
+Description: Marketing workflow for Q1 2025
 
-Title: Final Approval
-Type: Group
-Assignee: Editorial Board
-Comment: Ready for publication decision
+Assigned Users:
+• John Smith
+• Jane Doe
+• Marketing Manager
+
+Resource Locations:
+• Google Drive - Marketing Folder
+• Trello Board - Q1 Projects
+
+Destination Locations:
+📍 Public
+📍 Customer Portal
 ```
 
-## Field Display Configuration
+## Use Case Examples
 
-### Standard Display
+### Example 1: Public Blog Post Workflow
 
-The default formatter displays assignments in a clean table-like format with headers:
+```
+Workflow: "Blog Publishing Workflow"
+Assigned Users:
+  - content_writer
+  - editor
+  - seo_specialist
+  
+Resource Locations:
+  - Google Drive - Blog Drafts
+  - Media Library - Blog Images
 
-| Title | Type | Assignee | Comment |
-|-------|------|----------|---------|
-| ... | ... | ... | ... |
+Destination Locations:
+  - Public  ✓ (visible to all)
 
-### Customize Display
+Assigned To:
+  - Blog Post: "10 Tips for Better Productivity"
+  - Blog Post: "Company News Update"
+```
 
-1. Navigate to **Structure > Content types > [Your Type] > Manage display**
+### Example 2: Internal Documentation Workflow
 
-2. Find your workflow assignment field
+```
+Workflow: "Internal Wiki Documentation"
+Assigned Users:
+  - tech_writer
+  - department_head
+  - documentation_reviewer
 
-3. Click the gear icon to configure formatter settings
+Resource Locations:
+  - Confluence - Engineering Docs
+  - GitHub - /docs/internal
 
-4. Save changes
+Destination Locations:
+  - Private  ✓ (restricted access)
+  - Internal Wiki  ✓
+
+Assigned To:
+  - Page: "Employee Onboarding Guide"
+  - Page: "Internal API Documentation"
+```
+
+### Example 3: Mixed Access Project Workflow
+
+```
+Workflow: "Product Launch 2025"
+Assigned Users:
+  - project_manager
+  - marketing_team
+  - sales_team
+
+Resource Locations:
+  - Project Server - /launch-2025
+  - Asset Library - Product Launch
+
+Destination Locations:
+  - Public  ✓ (marketing materials)
+  - Private  ✓ (internal strategy docs)
+  - Partner Site  ✓ (partner resources)
+
+Assigned To:
+  - Event: "Product Launch Event"
+  - Page: "Product Launch Strategy" (Private)
+  - Page: "Product Announcement" (Public)
+```
 
 ## API Usage
 
-### Getting Assignments Programmatically
+### Creating a Workflow with Destinations
 
 ```php
-// Load a node
-$node = \Drupal\node\Entity\Node::load(123);
+use Drupal\workflow_assignment\Entity\WorkflowList;
 
-// Get all assignments
-if ($node->hasField('field_workflow_assignment')) {
-  $assignments = $node->get('field_workflow_assignment');
+$workflow = WorkflowList::create([
+  'id' => 'my_project',
+  'label' => 'My Project Workflow',
+  'description' => 'Workflow for my project',
+]);
+
+// Assign users
+$workflow->addAssignedUser(5);
+$workflow->addAssignedUser(12);
+
+// Add resource tags
+$workflow->addResourceTag(10);
+
+// Add destination tags (NEW!)
+$workflow->addDestinationTag(1);  // Public
+$workflow->addDestinationTag(2);  // Private
+
+$workflow->save();
+```
+
+### Getting Destination Information
+
+```php
+$workflow = \Drupal::entityTypeManager()
+  ->getStorage('workflow_list')
+  ->load('my_project');
+
+// Get destination tags
+$destinations = $workflow->getDestinationTags();
+// Returns: [1, 2] (term IDs)
+
+// Load destination terms
+$term_storage = \Drupal::entityTypeManager()
+  ->getStorage('taxonomy_term');
   
-  foreach ($assignments as $assignment) {
-    $title = $assignment->title;
-    $type = $assignment->target_type;
-    $id = $assignment->target_id;
-    $comment = $assignment->comment;
-    $entity = $assignment->getEntity();
-    
-    if ($entity) {
-      $name = $entity->label();
-      echo "[$title] {$type}: {$name} - {$comment}\n";
-    }
+foreach ($destinations as $tid) {
+  $term = $term_storage->load($tid);
+  echo $term->getName();  // "Public" or "Private"
+}
+```
+
+## Permissions
+
+- **Administer workflow lists** - Create, edit, delete workflows
+- **Assign workflow lists to content** - Assign/change workflows on content
+- **View workflow list assignments** - View workflow information
+
+## Theming
+
+### Template Files
+
+- `workflow-tab-content.html.twig` - Workflow tab display template
+
+### CSS Classes
+
+- `.workflow-tab-content` - Main tab container
+- `.workflow-section` - Section wrapper
+- `.workflow-field` - Individual field display
+- `.workflow-field--destinations` - Destination fields (green themed)
+- `.destination-tag--public` - Public destination styling (blue)
+- `.destination-tag--private` - Private destination styling (red)
+
+### Customizing Destination Colors
+
+Edit `css/workflow-tab.css`:
+
+```css
+.destination-tag--public {
+  background: #e3f2fd !important;
+  border-color: #90caf9 !important;
+  color: #1976d2;
+}
+
+.destination-tag--private {
+  background: #fce4ec !important;
+  border-color: #f48fb1 !important;
+  color: #c2185b;
+}
+```
+
+## Architecture
+
+### Key Components
+
+1. **WorkflowList Entity** (`src/Entity/WorkflowList.php`)
+   - Config entity storing workflow data
+   - Methods for managing users, groups, resources, and destinations
+
+2. **NodeWorkflowController** (`src/Controller/NodeWorkflowController.php`)
+   - Handles workflow tab display
+   - NEW: Dedicated controller for tab functionality
+
+3. **Forms**
+   - `WorkflowListForm.php` - Full workflow create/edit
+   - `QuickEditWorkflowForm.php` - Streamlined editing
+   - `NodeAssignWorkflowForm.php` - Assign workflows to content
+   - `WorkflowAssignmentSettingsForm.php` - Module configuration
+
+4. **Routing**
+   - Dedicated route for workflow tab (`/node/{nid}/workflow`)
+   - Tab integration via `links.task.yml`
+
+## Upgrade Notes
+
+### Upgrading from Original Version
+
+If you have the original dworkflow module installed:
+
+1. **Backup your database**
+2. Install this improved version
+3. Run update hooks:
+   ```bash
+   drush updatedb
+   drush cr
+   ```
+4. The update will:
+   - Create the destination_locations vocabulary
+   - Add Public and Private default terms
+   - Update module configuration
+
+## Troubleshooting
+
+### Workflow Tab Not Appearing
+
+- Check content type is enabled in settings
+- Verify user has "view workflow list assignments" permission
+- Clear caches: `drush cr`
+
+### Destination Locations Missing
+
+- Run update hooks: `drush updatedb`
+- Manually create vocabulary at `/admin/structure/taxonomy/add`
+- Set vocabulary in settings: `/admin/config/workflow/workflow-assignment`
+
+### Field Not on Content Type
+
+- Save settings again to trigger field creation
+- Check field configuration: `/admin/structure/types/manage/[type]/fields`
+- Manually add if needed: field name is `field_workflow_list`
+
+## Development
+
+### Adding Custom Destination Types
+
+1. Go to `/admin/structure/taxonomy/manage/destination_locations`
+2. Click "Add term"
+3. Create your custom destination (e.g., "Partner Portal", "Mobile App")
+4. Optionally add custom CSS in `css/workflow-tab.css`:
+
+```css
+.destination-tag--partner-portal {
+  background: #fff3e0 !important;
+  border-color: #ffb74d !important;
+  color: #f57c00;
+}
+```
+
+### Extending the Module
+
+Implement hooks for custom functionality:
+
+```php
+/**
+ * Implements hook_workflow_list_presave().
+ */
+function mymodule_workflow_list_presave($entity) {
+  // React to workflow changes
+  if ($entity->hasDestinationTag('public')) {
+    // Custom logic for public destinations
   }
 }
 ```
 
-### Adding Assignments Programmatically
+## Support
 
-```php
-use Drupal\node\Entity\Node;
-
-$node = Node::load(123);
-
-// Add assignment with title and comment
-$node->field_workflow_assignment[] = [
-  'title' => 'Initial Review',
-  'target_type' => 'user',
-  'target_id' => 5,
-  'comment' => 'Please review by end of week',
-];
-
-$node->field_workflow_assignment[] = [
-  'title' => 'Technical Approval',
-  'target_type' => 'group',
-  'target_id' => 3,
-  'comment' => 'Final technical sign-off required',
-];
-
-$node->save();
-```
-
-### Querying by Assignment Title
-
-```php
-// Find all nodes with "Final Approval" assignments
-$query = \Drupal::entityQuery('node')
-  ->condition('field_workflow_assignment.title', 'Final Approval', 'CONTAINS')
-  ->accessCheck(TRUE);
-
-$nids = $query->execute();
-```
-
-## Database Structure
-
-### Updated Field Table
-
-```sql
-CREATE TABLE node__field_workflow_assignment (
-  entity_id INT,
-  revision_id INT,
-  delta INT,
-  field_workflow_assignment_title VARCHAR(255),      -- NEW
-  field_workflow_assignment_target_type VARCHAR(32),
-  field_workflow_assignment_target_id INT,
-  field_workflow_assignment_comment TEXT,            -- NEW
-  ...
-);
-```
-
-### Example Data
-
-```
-entity_id=123, delta=0:
-  title='Content Review'
-  target_type='user'
-  target_id=5
-  comment='Check grammar and style'
-
-entity_id=123, delta=1:
-  title='Technical Review'
-  target_type='group'
-  target_id=3
-  comment='Verify all technical details'
-```
-
-## Styling and Theming
-
-### Override Template
-
-Template file: `templates/dworkflow-assignment-list.html.twig`
-
-Available variables:
-```twig
-assignments: [
-  {
-    title: 'Assignment title',
-    type: 'user' or 'group',
-    entity: Entity object,
-    label: Entity label,
-    url: Entity URL,
-    comment: 'Assignee comment'
-  }
-]
-```
-
-### CSS Classes
-
-The module provides extensive CSS classes for styling:
-
-```css
-/* Main containers */
-.dworkflow-assignments { }
-.dworkflow-assignment-list { }
-
-/* Individual assignment rows */
-.dworkflow-assignment-item { }
-.dworkflow-assignment-title { }
-.dworkflow-assignment-type { }
-.dworkflow-assignment-assignee { }
-.dworkflow-assignment-comment { }
-
-/* Type badges */
-.dworkflow-badge { }
-.dworkflow-badge--user { }
-.dworkflow-badge--group { }
-
-/* Form widgets */
-.dworkflow-assignment-row { }
-.dworkflow-title-field { }
-.dworkflow-type-field { }
-.dworkflow-assignee-field { }
-.dworkflow-comment-field { }
-```
-
-### Responsive Design
-
-The layout automatically adapts to mobile devices, stacking fields vertically on smaller screens.
-
-## Use Cases
-
-### 1. Editorial Workflow
-```
-Title: Copy Edit → Type: User → Assignee: copy_editor → Comment: Check AP style
-Title: Fact Check → Type: User → Assignee: fact_checker → Comment: Verify all sources
-Title: Final Review → Type: Group → Assignee: Editors → Comment: Ready for publication
-```
-
-### 2. Project Management
-```
-Title: Development → Type: User → Assignee: developer_alice → Comment: Backend API
-Title: Frontend → Type: User → Assignee: developer_bob → Comment: React components
-Title: QA Testing → Type: Group → Assignee: QA Team → Comment: Full regression test
-```
-
-### 3. Document Approval
-```
-Title: Legal Review → Type: User → Assignee: legal_counsel → Comment: Contract terms
-Title: Finance Approval → Type: User → Assignee: cfo → Comment: Budget approval
-Title: CEO Sign-off → Type: User → Assignee: ceo → Comment: Final authorization
-```
-
-### 4. Event Planning
-```
-Title: Venue Booking → Type: User → Assignee: coordinator → Comment: Confirm by March 1
-Title: Catering → Type: Group → Assignee: Catering Team → Comment: 150 guests
-Title: Marketing → Type: Group → Assignee: Marketing → Comment: Social media campaign
-```
-
-## Migration from Previous Version
-
-If you're upgrading from the previous version without title and comment fields:
-
-### Step 1: Backup Your Database
-```bash
-drush sql:dump > backup.sql
-```
-
-### Step 2: Run Update
-```bash
-drush updb -y
-```
-
-### Step 3: Existing Data
-- Existing assignments will remain intact
-- Title and comment fields will be empty
-- You can edit existing content to add titles and comments
-
-## Troubleshooting
-
-### Field doesn't update after upgrade
-```bash
-drush cr
-drush entity:updates
-drush updb -y
-```
-
-### Tabs don't appear
-- Install Field Group module: `composer require drupal/field_group`
-- Configure tab groups in form display settings
-
-### Layout issues
-- Clear caches: `drush cr`
-- Check theme compatibility
-- Review browser console for CSS conflicts
-
-### Empty titles or comments display oddly
-The CSS includes placeholder styling (—) for empty values. Override in your theme if needed.
-
-## Performance Considerations
-
-### For Large Numbers of Assignments
-- The field uses database indexes on target_type and target_id
-- Consider limiting the number of values if you have thousands of assignments
-- Use Views for complex queries across multiple nodes
-
-### Caching
-- Field values are cached with the parent entity
-- Clear cache after programmatic updates
-
-## Permissions
-
-Standard Drupal field permissions apply:
-- **Edit own [field]**: Users can edit assignments on their own content
-- **Edit any [field]**: Users can edit assignments on any content  
-- **View [field]**: Users can view assignments
-
-Configure via **People > Permissions** or Field Permissions module.
-
-## Support and Contributing
-
-### Documentation
-- [Drupal Field API](https://www.drupal.org/docs/drupal-apis/entity-api/fieldtypes-fieldwidgets-and-fieldformatters)
-- [Field Group Module](https://www.drupal.org/project/field_group)
-
-### Known Issues
-- None currently reported
-
-### Feature Requests
-Submit via your project's issue tracker
+For issues or feature requests:
+- Review this documentation
+- Check Drupal.org documentation
+- Review GitHub issues
 
 ## License
 
-GPL-2.0-or-later
+This module is provided as-is for use with Drupal 10+.
 
 ## Credits
 
-Enhanced workflow management for Drupal 10/11 with title and comment support.
+Improved version with:
+- Dedicated workflow tab functionality
+- Destination location system with Public/Private defaults
+- Enhanced UI and styling
+- Better code organization
+
+---
+
+**Version:** 2.0  
+**Last Updated:** 2025  
+**Drupal Compatibility:** 10.x, 11.x

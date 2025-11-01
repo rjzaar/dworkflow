@@ -1,0 +1,126 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the workflow_assignment module.
+ */
+
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\Entity\Term;
+
+/**
+ * Implements hook_install().
+ */
+function workflow_assignment_install() {
+  // Create the resource_locations vocabulary if it doesn't exist.
+  $vocabulary = Vocabulary::load('resource_locations');
+  if (!$vocabulary) {
+    $vocabulary = Vocabulary::create([
+      'vid' => 'resource_locations',
+      'name' => 'Resource Locations',
+      'description' => 'Taxonomy vocabulary for workflow resource locations',
+    ]);
+    $vocabulary->save();
+  }
+
+  // Create the destination_locations vocabulary.
+  $dest_vocabulary = Vocabulary::load('destination_locations');
+  if (!$dest_vocabulary) {
+    $dest_vocabulary = Vocabulary::create([
+      'vid' => 'destination_locations',
+      'name' => 'Destination Locations',
+      'description' => 'Taxonomy vocabulary for workflow destination locations',
+    ]);
+    $dest_vocabulary->save();
+  }
+
+  // Create default destination location terms: 'public' and 'private'.
+  $public_term = Term::create([
+    'vid' => 'destination_locations',
+    'name' => 'Public',
+    'description' => ['value' => 'Public destination - accessible to all users', 'format' => 'plain_text'],
+  ]);
+  $public_term->save();
+
+  $private_term = Term::create([
+    'vid' => 'destination_locations',
+    'name' => 'Private',
+    'description' => ['value' => 'Private destination - restricted access', 'format' => 'plain_text'],
+  ]);
+  $private_term->save();
+
+  // Set default configuration.
+  \Drupal::configFactory()->getEditable('workflow_assignment.settings')
+    ->set('enabled_content_types', [])
+    ->set('resource_vocabulary', 'resource_locations')
+    ->set('destination_vocabulary', 'destination_locations')
+    ->save();
+
+  \Drupal::messenger()->addStatus(t('Workflow Assignment module installed successfully. Default destination locations (Public and Private) have been created.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function workflow_assignment_uninstall() {
+  // Remove workflow field from all content types.
+  $field_storage = \Drupal::entityTypeManager()
+    ->getStorage('field_storage_config')
+    ->load('node.field_workflow_list');
+  
+  if ($field_storage) {
+    $field_storage->delete();
+  }
+
+  // Clean up configuration.
+  \Drupal::configFactory()->getEditable('workflow_assignment.settings')->delete();
+
+  \Drupal::messenger()->addStatus(t('Workflow Assignment module uninstalled. Resource Locations and Destination Locations vocabularies have been preserved.'));
+}
+
+/**
+ * Add destination locations vocabulary and default terms.
+ */
+function workflow_assignment_update_9001() {
+  // Create the destination_locations vocabulary.
+  $dest_vocabulary = Vocabulary::load('destination_locations');
+  if (!$dest_vocabulary) {
+    $dest_vocabulary = Vocabulary::create([
+      'vid' => 'destination_locations',
+      'name' => 'Destination Locations',
+      'description' => 'Taxonomy vocabulary for workflow destination locations',
+    ]);
+    $dest_vocabulary->save();
+  }
+
+  // Create default destination location terms.
+  $terms_to_create = [
+    'Public' => 'Public destination - accessible to all users',
+    'Private' => 'Private destination - restricted access',
+  ];
+
+  foreach ($terms_to_create as $name => $description) {
+    $existing_terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties([
+        'vid' => 'destination_locations',
+        'name' => $name,
+      ]);
+
+    if (empty($existing_terms)) {
+      $term = Term::create([
+        'vid' => 'destination_locations',
+        'name' => $name,
+        'description' => ['value' => $description, 'format' => 'plain_text'],
+      ]);
+      $term->save();
+    }
+  }
+
+  // Update configuration.
+  \Drupal::configFactory()->getEditable('workflow_assignment.settings')
+    ->set('destination_vocabulary', 'destination_locations')
+    ->save();
+
+  return t('Destination Locations vocabulary and default terms created successfully.');
+}
